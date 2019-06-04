@@ -1,0 +1,68 @@
+import * as express from 'express';
+import * as http from 'http';
+import * as WebSocket from 'ws';
+
+import DeviceConnection from './DeviceConnection';
+import DeviceList from './DevicesList';
+
+const app: express.Application = express();
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '100mb',
+    parameterLimit: 1000000
+  })
+);
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ port: 8000 });
+let client = null;
+
+let deviceList = new DeviceList();
+
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+(async () => {
+  app.get('/', (req: express.Request, res: express.Response) => {
+    res.send('hello world2');
+  });
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('new connection');
+    let client = new DeviceConnection(ws);
+    deviceList.push(client);
+  });
+
+  app.get('/devices', (req: express.Request, res: express.Response) => {
+    res.json(deviceList.getDevices());
+  });
+
+  app.get('/device/:deviceId', (req: express.Request, res: express.Response) => {
+    res.json(deviceList.getDevice(req.params.deviceId));
+  });
+
+  app.get('/device/:deviceId/:variable', (req: express.Request, res: express.Response) => {
+    res.json(deviceList.getDeviceVariable(req.params.deviceId, req.params.variable));
+  });
+
+  app.get('/device/:deviceId/:variable/value', (req: express.Request, res: express.Response) => {
+    res.json(deviceList.getDeviceVariableValue(req.params.deviceId, req.params.variable));
+  });
+
+  app.post('/device/:deviceId/:variable/value', (req: express.Request, res: express.Response) => {
+    const value = req.body;
+
+    console.log(value);
+
+    //deviceList.setDeviceVariableValue(req.params.deviceId, req.params.variable);
+
+    res.json(null);
+  });
+
+  app.listen(8080);
+})();
