@@ -11,7 +11,9 @@
   "license": "MIT",
   "dependencies": {
     "@types/express": "^4.16.1",
+    "@types/jsonschema": "^1.1.1",
     "express": "^4.16.4",
+    "jsonschema": "^1.2.4",
     "npm": "^6.9.0",
     "ts-node-dev": "^1.0.0-pre.32",
     "ws": "^7.0.0"

@@ -5,6 +5,8 @@ import * as WebSocket from 'ws';
 import DeviceConnection from './DeviceConnection';
 import DeviceList from './DevicesList';
 
+import { Validator } from 'jsonschema';
+
 const app: express.Application = express();
 app.use(express.json());
 app.use(
@@ -20,6 +22,8 @@ const wss = new WebSocket.Server({ port: 8000 });
 let client = null;
 
 let deviceList = new DeviceList();
+
+const validator = new Validator();
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
@@ -56,12 +60,21 @@ app.use(function(req, res, next) {
 
   app.post('/device/:deviceId/:variable/value', (req: express.Request, res: express.Response) => {
     const value = req.body;
+    const variable = deviceList.getDeviceVariable(req.params.deviceId, req.params.variable);
 
-    console.log(value);
+    if (!variable) {
+      res.statusCode = 404;
+      return res.json({});
+    }
 
-    //deviceList.setDeviceVariableValue(req.params.deviceId, req.params.variable);
 
-    res.json(null);
+    const validationResponse = validator.validate(value, variable.schema);
+    if (validationResponse.valid) {
+      res.json(deviceList.setDeviceVariableValue(req.params.deviceId, req.params.variable, value));
+    } else {
+      res.statusCode = 400;
+      res.json({ error: validationResponse.errors.map((error) => error.message) });
+    }
   });
 
   app.listen(8080);
