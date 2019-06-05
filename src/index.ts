@@ -4,8 +4,13 @@ import * as WebSocket from 'ws';
 
 import DeviceConnection from './DeviceConnection';
 import DeviceList from './DevicesList';
+import ControllerList from './ControllerList';
 
 import { Validator } from 'jsonschema';
+import ControllerConnection from './ControllerConnection';
+
+const URL_CTRL = '/controller';
+const URL_DEV = '/device';
 
 const app: express.Application = express();
 app.use(express.json());
@@ -22,6 +27,7 @@ const wss = new WebSocket.Server({ port: 8000 });
 let client = null;
 
 let deviceList = new DeviceList();
+let ctrlList = new ControllerList();
 
 const validator = new Validator();
 
@@ -36,10 +42,12 @@ app.use(function(req, res, next) {
     res.send('hello world2');
   });
 
-  wss.on('connection', (ws: WebSocket) => {
-    console.log('new connection');
-    let client = new DeviceConnection(ws);
-    deviceList.push(client);
+  wss.on('connection', (ws: WebSocket, req) => {
+    if (req.url === URL_CTRL) {
+      ctrlList.push(new ControllerConnection(ws));
+    } else if (req.url === URL_DEV) {
+      deviceList.push(new DeviceConnection(ws));
+    }
   });
 
   app.get('/devices', (req: express.Request, res: express.Response) => {
