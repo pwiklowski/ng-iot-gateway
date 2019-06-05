@@ -1,11 +1,7 @@
-import { MessageType, Request, DeviceConfig } from '../../common/interfaces';
+import { MessageType, Request } from '../../common/interfaces';
 import WebsocketConnection from './WebsocketConnection';
 
-export default class DeviceConnection extends WebsocketConnection {
-  getConfig(): DeviceConfig {
-    return this.config;
-  }
-
+export default class ControllerConnection extends WebsocketConnection {
   handleRequest(msg: Request) {
     switch (msg.type) {
       case MessageType.Hello:
