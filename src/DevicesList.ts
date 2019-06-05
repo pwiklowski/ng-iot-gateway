@@ -1,10 +1,13 @@
 import * as WebSocket from 'ws';
 import { MessageType, Request, Response } from '../../common/interfaces';
 import DeviceConnection from './DeviceConnection';
+import ControllerList from './ControllerList';
 
 export default class DeviceList extends Array<DeviceConnection> {
-  constructor() {
+  controllerList: ControllerList;
+  constructor(controllerList: ControllerList) {
     super();
+    this.controllerList = controllerList;
     Object.setPrototypeOf(this, Object.create(DeviceList.prototype));
   }
 
@@ -40,11 +43,15 @@ export default class DeviceList extends Array<DeviceConnection> {
 
     if (config && config.vars.hasOwnProperty(variable)) {
       config.vars[variable].value = value;
-
+      this.notifyChange(id, variable, value);
       return config.vars[variable].value;
     } else {
       return null;
     }
+  }
+
+  public notifyChange(id: String, variable: string, value: object) {
+    this.controllerList.notifyChange(id, variable, value);
   }
 
   public getDevice(id: String) {

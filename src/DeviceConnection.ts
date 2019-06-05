@@ -9,7 +9,7 @@ export default class DeviceConnection extends WebsocketConnection {
   handleRequest(msg: Request) {
     switch (msg.type) {
       case MessageType.Hello:
-        this.config = msg.args[0];
+        this.config = msg.args.config;
         break;
     }
   }

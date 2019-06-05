@@ -26,8 +26,8 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ port: 8000 });
 let client = null;
 
-let deviceList = new DeviceList();
 let ctrlList = new ControllerList();
+let deviceList = new DeviceList(ctrlList);
 
 const validator = new Validator();
 

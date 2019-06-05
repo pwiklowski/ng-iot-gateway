@@ -7,4 +7,15 @@ export default class ControllerList extends Array<ControllerConnection> {
     super();
     Object.setPrototypeOf(this, Object.create(ControllerList.prototype));
   }
+
+  notifyChange(id: String, variable: string, value: object) {
+    this.map((connection) => {
+      const notification: Request = {
+        type: MessageType.Notification,
+        args: { id, variable, value }
+      };
+
+      connection.sendRequest(notification);
+    });
+  }
 }

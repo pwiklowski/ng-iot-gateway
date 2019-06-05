@@ -29,8 +29,8 @@ export default abstract class DeviceConnection {
     }
   }
 
-  sendRequest(req: Request, callback: Function) {
-    if (callback !== undefined) {
+  sendRequest(req: Request, callback?: Function) {
+    if (callback !== undefined && req.reqId) {
       this.callbacks.set(req.reqId, callback);
     }
     this.socket.send(JSON.stringify(req));
