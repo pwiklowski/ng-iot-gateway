@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { MessageType, Request, Response } from '../../common/interfaces';
+import { MessageType, Request, Response, DeviceConfig } from '../../common/interfaces';
 import DeviceConnection from './DeviceConnection';
 import ControllerList from './ControllerList';
 
@@ -9,6 +9,21 @@ export default class DeviceList extends Array<DeviceConnection> {
     super();
     this.controllerList = controllerList;
     Object.setPrototypeOf(this, Object.create(DeviceList.prototype));
+  }
+
+  public add(item: DeviceConnection) {
+    item.onDeviceConnected((config: DeviceConfig) => {
+      this.controllerList.deviceAdded(config.id);
+      this.push(item);
+    });
+
+    item.onDeviceDisconnected(() => {
+      this.controllerList.deviceRemoved(item.getConfig().id);
+      const index = this.indexOf(item, 0);
+      if (index > -1) {
+        this.splice(index, 1);
+      }
+    });
   }
 
   public getDevices() {

@@ -18,4 +18,24 @@ export default class ControllerList extends Array<ControllerConnection> {
       connection.sendRequest(notification);
     });
   }
+
+  deviceAdded(id: String) {
+    this.map((connection) => {
+      const notification: Request = {
+        type: MessageType.DeviceConnected,
+        args: { id }
+      };
+      connection.sendRequest(notification);
+    });
+  }
+
+  deviceRemoved(id: String) {
+    this.map((connection) => {
+      const notification: Request = {
+        type: MessageType.DeviceDisconnected,
+        args: { id }
+      };
+      connection.sendRequest(notification);
+    });
+  }
 }

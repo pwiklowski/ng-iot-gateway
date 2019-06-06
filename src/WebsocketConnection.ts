@@ -17,7 +17,11 @@ export default abstract class DeviceConnection {
         this.handleRequest(msg);
       }
     });
+
+    this.socket.on('close', this.onDisconnect.bind(this));
   }
+
+  abstract onDisconnect(): void;
 
   abstract handleRequest(msg: Request): void;
 
