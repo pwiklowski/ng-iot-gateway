@@ -47,6 +47,8 @@ app.use(function(req, res, next) {
       ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
     } else if (req.url === URL_DEV) {
       deviceList.add(new DeviceConnection(ws));
+    } else {
+      ws.close();
     }
   });
 
