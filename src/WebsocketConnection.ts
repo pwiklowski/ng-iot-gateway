@@ -39,4 +39,9 @@ export default abstract class DeviceConnection {
     }
     this.socket.send(JSON.stringify(req));
   }
+
+  sendResponse(req: Request, res: Response) {
+    res.resId = req.reqId;
+    this.socket.send(JSON.stringify(res));
+  }
 }

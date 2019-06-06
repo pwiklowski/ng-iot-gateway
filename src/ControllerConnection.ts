@@ -25,6 +25,12 @@ export default class ControllerConnection extends WebsocketConnection {
       case MessageType.Hello:
         this.config = msg.args[0];
         break;
+      case MessageType.GetDevices:
+        this.sendResponse(msg, {
+          res: { devices: this.deviceList.map((device) => device.getConfig().id) }
+        });
+
+        break;
     }
   }
 }
