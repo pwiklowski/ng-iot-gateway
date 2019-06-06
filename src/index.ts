@@ -44,7 +44,7 @@ app.use(function(req, res, next) {
 
   wss.on('connection', (ws: WebSocket, req) => {
     if (req.url === URL_CTRL) {
-      ctrlList.push(new ControllerConnection(ws));
+      ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
     } else if (req.url === URL_DEV) {
       deviceList.add(new DeviceConnection(ws));
     }
