@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { MessageType, Request, Response } from '../../common/interfaces';
+import { MessageType, Request, Response } from '@wiklosoft/ng-iot';
 import ControllerConnection from './ControllerConnection';
 
 export default class ControllerList extends Array<ControllerConnection> {

@@ -1,4 +1,4 @@
-import { MessageType, Request } from '../../common/interfaces';
+import { MessageType, Request } from '@wiklosoft/ng-iot';
 import WebsocketConnection from './WebsocketConnection';
 import * as WebSocket from 'ws';
 import ControllerList from './ControllerList';

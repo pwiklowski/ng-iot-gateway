@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { Request, Response } from '../../common/interfaces';
+import { Request, Response } from '@wiklosoft/ng-iot';
 
 export default abstract class DeviceConnection {
   socket: WebSocket;

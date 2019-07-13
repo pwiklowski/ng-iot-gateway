@@ -16,7 +16,8 @@
     "jsonschema": "^1.2.4",
     "npm": "^6.9.0",
     "ts-node-dev": "^1.0.0-pre.32",
-    "ws": "^7.0.0"
+    "ws": "^7.0.0",
+    "@wiklosoft⁄ng-iot": "0.0.1"
   },
   "devDependencies": {
     "@types/ws": "^6.0.1",

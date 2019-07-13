@@ -1,4 +1,4 @@
-import { MessageType, Request, DeviceConfig } from '../../common/interfaces';
+import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import WebsocketConnection from './WebsocketConnection';
 
 interface EventCallbacks {
