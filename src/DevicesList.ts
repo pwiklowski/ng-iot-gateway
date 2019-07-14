@@ -13,7 +13,7 @@ export default class DeviceList extends Array<DeviceConnection> {
 
   public add(item: DeviceConnection) {
     item.onDeviceConnected((config: DeviceConfig) => {
-      this.controllerList.deviceAdded(config.id);
+      this.controllerList.deviceAdded(config);
       this.push(item);
     });
 

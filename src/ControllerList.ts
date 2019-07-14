@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { MessageType, Request, Response } from '@wiklosoft/ng-iot';
+import { MessageType, Request, Response, DeviceConfig } from '@wiklosoft/ng-iot';
 import ControllerConnection from './ControllerConnection';
 
 export default class ControllerList extends Array<ControllerConnection> {
@@ -19,11 +19,11 @@ export default class ControllerList extends Array<ControllerConnection> {
     });
   }
 
-  deviceAdded(id: String) {
+  deviceAdded(device: DeviceConfig) {
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.DeviceConnected,
-        args: { id }
+        args: { device }
       };
       connection.sendRequest(notification);
     });
