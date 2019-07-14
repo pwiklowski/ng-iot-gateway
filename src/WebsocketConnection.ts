@@ -26,10 +26,12 @@ export default abstract class DeviceConnection {
   abstract handleRequest(msg: Request): void;
 
   handleResponse(msg: Response) {
-    const callback = this.callbacks.get(msg.resId);
-    if (callback) {
-      callback(msg);
-      this.callbacks.delete(msg.resId);
+    if (msg.resId) {
+      const callback = this.callbacks.get(msg.resId);
+      if (callback) {
+        callback(msg);
+        this.callbacks.delete(msg.resId);
+      }
     }
   }
 
