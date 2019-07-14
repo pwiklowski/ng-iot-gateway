@@ -8,7 +8,8 @@ interface EventCallbacks {
 export default class DeviceConnection extends WebsocketConnection {
   eventCallbacks: EventCallbacks = {
     deviceConnected: new Array(),
-    deviceDiconnected: new Array()
+    deviceDiconnected: new Array(),
+    valueUpdated: new Array()
   };
 
   getConfig(): DeviceConfig {
@@ -20,6 +21,9 @@ export default class DeviceConnection extends WebsocketConnection {
       case MessageType.Hello:
         this.config = msg.args.config;
         this.eventCallbacks.deviceConnected.map((callback) => callback(this.config));
+        break;
+      case MessageType.ValueUpdated:
+        this.eventCallbacks.valueUpdated.map((callback) => callback(msg.args.variable, msg.args.value));
         break;
     }
   }
@@ -34,5 +38,9 @@ export default class DeviceConnection extends WebsocketConnection {
 
   onDeviceConnected(callback: Function) {
     this.eventCallbacks.deviceConnected.push(callback);
+  }
+
+  onValueUpdated(callback: Function) {
+    this.eventCallbacks.valueUpdated.push(callback);
   }
 }

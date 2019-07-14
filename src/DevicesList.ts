@@ -24,6 +24,10 @@ export default class DeviceList extends Array<DeviceConnection> {
         this.splice(index, 1);
       }
     });
+
+    item.onValueUpdated((variable: string, value: object) => {
+      this.controllerList.valueUpdated(item.getConfig().id, variable, value);
+    });
   }
 
   public getDevices() {
