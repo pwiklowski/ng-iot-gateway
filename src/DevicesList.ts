@@ -63,6 +63,18 @@ export default class DeviceList extends Array<DeviceConnection> {
     if (config && config.vars.hasOwnProperty(variable)) {
       config.vars[variable].value = value;
       this.notifyChange(id, variable, value);
+
+      const deviceConnection = this.find((connection) => {
+        return connection.getConfig().id === id;
+      });
+
+      if (deviceConnection) {
+        deviceConnection.sendRequest({
+          type: MessageType.SetValue,
+          args: { id, variable, value }
+        });
+      }
+
       return config.vars[variable].value;
     } else {
       return null;
