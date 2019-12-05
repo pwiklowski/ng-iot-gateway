@@ -77,13 +77,17 @@ app.use(function(req, res, next) {
       return res.json({});
     }
 
+    if (!variable.access.includes('w')) {
+      res.statusCode = 405;
+      return res.json({});
+    }
 
     const validationResponse = validator.validate(value, variable.schema);
     if (validationResponse.valid) {
       return res.json(deviceList.setDeviceVariableValue(req.params.deviceUuid, req.params.variableUuid, value));
     } else {
       res.statusCode = 400;
-      res.json({ error: validationResponse.errors.map((error) => error.message) });
+      return res.json({ error: validationResponse.errors.map((error) => error.message) });
     }
   });
 
