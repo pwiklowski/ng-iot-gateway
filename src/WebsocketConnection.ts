@@ -1,10 +1,10 @@
 import * as WebSocket from 'ws';
-import { Request, Response } from '@wiklosoft/ng-iot';
+import { Request, Response, DeviceConfig } from '@wiklosoft/ng-iot';
 
 export default abstract class DeviceConnection {
   socket: WebSocket;
   callbacks: Map<number, Function>;
-  config: any;
+  config!: DeviceConfig;
 
   constructor(socket: WebSocket) {
     this.callbacks = new Map();

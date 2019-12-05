@@ -34,8 +34,8 @@ export default class ControllerConnection extends WebsocketConnection {
         });
         break;
       case MessageType.SetValue:
-        const deviceUuid = msg.args.device;
-        const variableUuid = msg.args.variable;
+        const deviceUuid = msg.args.deviceUuid;
+        const variableUuid = msg.args.variableUuid;
         const value = msg.args.value;
 
         const variable = this.deviceList.getDeviceVariable(deviceUuid, variableUuid);

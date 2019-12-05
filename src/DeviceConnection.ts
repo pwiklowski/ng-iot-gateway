@@ -23,13 +23,13 @@ export default class DeviceConnection extends WebsocketConnection {
         this.eventCallbacks.deviceConnected.map((callback) => callback(this.config));
         break;
       case MessageType.ValueUpdated:
-        this.eventCallbacks.valueUpdated.map((callback) => callback(msg.args.variable, msg.args.value));
+        this.eventCallbacks.valueUpdated.map((callback) => callback(msg.args.variableUuid, msg.args.value));
         break;
     }
   }
 
   onDisconnect() {
-    this.eventCallbacks.deviceDiconnected.map((callback) => callback(this.config.id));
+    this.eventCallbacks.deviceDiconnected.map((callback) => callback(this.config.deviceUuid));
   }
 
   onDeviceDisconnected(callback: Function) {

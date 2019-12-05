@@ -19,12 +19,12 @@ export default class ControllerList extends Array<ControllerConnection> {
     });
   }
 
-  valueUpdated(deviceId: string, variable: string, value: any) {
+  valueUpdated(deviceUuid: string, variableUuid: string, value: any) {
     //TODO make sure that controller wants that update
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.ValueUpdated,
-        args: { deviceId, variable, value }
+        args: { deviceUuid, variableUuid, value }
       };
       connection.sendRequest(notification);
     });

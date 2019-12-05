@@ -80,7 +80,7 @@ app.use(function(req, res, next) {
 
     const validationResponse = validator.validate(value, variable.schema);
     if (validationResponse.valid) {
-      res.json(deviceList.setDeviceVariableValue(req.params.deviceId, req.params.variable, value));
+      return res.json(deviceList.setDeviceVariableValue(req.params.deviceUuid, req.params.variableUuid, value));
     } else {
       res.statusCode = 400;
       res.json({ error: validationResponse.errors.map((error) => error.message) });

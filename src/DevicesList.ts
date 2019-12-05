@@ -18,22 +18,23 @@ export default class DeviceList extends Array<DeviceConnection> {
     });
 
     item.onDeviceDisconnected(() => {
-      this.controllerList.deviceRemoved(item.getConfig().id);
+      console.log('device disconnected', item.getConfig().deviceUuid, item.getConfig().name);
+      this.controllerList.deviceRemoved(item.getConfig().deviceUuid);
       const index = this.indexOf(item, 0);
       if (index > -1) {
         this.splice(index, 1);
       }
     });
 
-    item.onValueUpdated((variable: string, value: object) => {
-      this.controllerList.valueUpdated(item.getConfig().id, variable, value);
+    item.onValueUpdated((variableUuid: string, value: object) => {
+      this.controllerList.valueUpdated(item.getConfig().deviceUuid, variableUuid, value);
     });
   }
 
   public getDevices() {
     return this.map((connection) => {
-      const { name, id } = connection.getConfig();
-      return { name, id };
+      const { name, deviceUuid } = connection.getConfig();
+      return { name, deviceUuid };
     });
   }
 
@@ -57,25 +58,24 @@ export default class DeviceList extends Array<DeviceConnection> {
     }
   }
 
-  public setDeviceVariableValue(id: String, variable: string, value: object) {
-    const config = this.getDevice(id);
+  public setDeviceVariableValue(deviceUuid: String, variableUuid: string, value: object) {
+    const config = this.getDevice(deviceUuid);
 
-    if (config && config.vars.hasOwnProperty(variable)) {
-      config.vars[variable].value = value;
-      this.notifyChange(id, variable, value);
+    if (config && config.vars.hasOwnProperty(variableUuid)) {
+      config.vars[variableUuid].value = value;
 
       const deviceConnection = this.find((connection) => {
-        return connection.getConfig().id === id;
+        return connection.getConfig().deviceUuid === deviceUuid;
       });
 
       if (deviceConnection) {
         deviceConnection.sendRequest({
           type: MessageType.SetValue,
-          args: { id, variable, value }
+          args: { deviceUuid, variableUuid, value }
         });
       }
 
-      return config.vars[variable].value;
+      return config.vars[variableUuid].value;
     } else {
       return null;
     }
@@ -85,9 +85,9 @@ export default class DeviceList extends Array<DeviceConnection> {
     this.controllerList.notifyChange(id, variable, value);
   }
 
-  public getDevice(id: String) {
+  public getDevice(deviceUuid: String) {
     const device = this.find((connection) => {
-      return connection.getConfig().id === id;
+      return connection.getConfig().deviceUuid === deviceUuid;
     });
 
     if (device) {
