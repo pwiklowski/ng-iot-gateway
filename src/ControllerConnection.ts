@@ -1,9 +1,10 @@
-import { MessageType, Request } from '@wiklosoft/ng-iot';
+import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import WebsocketConnection from './WebsocketConnection';
 import * as WebSocket from 'ws';
 import ControllerList from './ControllerList';
 import DeviceList from './DevicesList';
 import { Validator } from 'jsonschema';
+import DeviceConnection from './DeviceConnection';
 export default class ControllerConnection extends WebsocketConnection {
   deviceList: DeviceList;
   controllerList: ControllerList;
@@ -33,6 +34,13 @@ export default class ControllerConnection extends WebsocketConnection {
           res: { devices: this.deviceList.map((device) => device.getConfig()) }
         });
         break;
+      case MessageType.GetDevice: {
+        const deviceUuid = msg.args.deviceUuid;
+        const deviceConfig: DeviceConfig | null = this.deviceList.getDevice(deviceUuid);
+
+        this.sendResponse(msg, { res: { deviceConfig } });
+        break;
+      }
       case MessageType.SetValue:
         const deviceUuid = msg.args.deviceUuid;
         const variableUuid = msg.args.variableUuid;
