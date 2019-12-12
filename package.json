@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p ./src",
-    "start": "ts-node-dev src/index.ts"
+    "start": "tsc -p ./src && node dist/index.js"
   },
   "author": "Pawel Wiklowski <pawel.wiklowski@gmail.com>",
   "license": "MIT",
@@ -17,10 +17,11 @@
     "npm": "^6.9.0",
     "ts-node-dev": "^1.0.0-pre.32",
     "ws": "^7.0.0",
-    "@wiklosoft⁄ng-iot": "0.0.1"
+    "@wiklosoft/ng-iot": "^0.0.4"
   },
   "devDependencies": {
     "@types/ws": "^6.0.1",
+    "ts-loader": "^6.0.4",
     "typescript": "^3.4.5"
   }
 }
