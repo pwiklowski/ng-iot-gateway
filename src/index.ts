@@ -1,4 +1,4 @@
-import * as express from 'express';
+import express from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
 
@@ -12,7 +12,7 @@ import ControllerConnection from './ControllerConnection';
 const URL_CTRL = '/controller';
 const URL_DEV = '/device';
 
-const app: express.Application = express();
+const app: any = express();
 app.use(express.json());
 app.use(
   express.urlencoded({
@@ -53,7 +53,7 @@ let deviceList = new DeviceList(ctrlList);
 
 const validator = new Validator();
 
-app.use(function(req, res, next) {
+app.use(function(req: any, res: any, next: any) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
@@ -64,7 +64,7 @@ app.use(function(req, res, next) {
     res.send('hello world2');
   });
 
-  wss.on('connection', (ws: WebSocket, req) => {
+  wss.on('connection', (ws: WebSocket, req: any) => {
     if (req.url === URL_CTRL) {
       ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
     } else if (req.url === URL_DEV) {
