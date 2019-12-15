@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/index.js"
+    "start": "tsc && node build/src/index.js"
   },
   "author": "Pawel Wiklowski <pawel.wiklowski@gmail.com>",
   "license": "MIT",
