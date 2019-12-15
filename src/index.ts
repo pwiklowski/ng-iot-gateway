@@ -24,6 +24,28 @@ app.use(
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ port: 8000 });
+
+wss.on('connection', function connection(ws) {
+  (ws as any).isAlive = true;
+  ws.on('pong', () => {
+    console.log('pong');
+    (ws as any).isAlive = true;
+  });
+});
+
+setInterval(function ping() {
+  wss.clients.forEach(function each(ws) {
+    if ((ws as any).isAlive === false) {
+      console.log('remove dead connection');
+      return ws.terminate();
+    }
+
+    (ws as any).isAlive = false;
+    ws.ping(() => {});
+    console.log('ping');
+  });
+}, 10000);
+
 let client = null;
 
 let ctrlList = new ControllerList();
