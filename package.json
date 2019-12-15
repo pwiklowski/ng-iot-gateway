@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p ./src",
-    "start": "tsc -p ./src && node dist/index.js"
+    "build": "tsc",
+    "start": "tsc && node dist/index.js"
   },
   "author": "Pawel Wiklowski <pawel.wiklowski@gmail.com>",
   "license": "MIT",
