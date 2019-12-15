@@ -6,6 +6,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "experimentalDecorators": true,
+    "esModuleInterop": true,
     "declaration": true,
     "removeComments": true,
     "noImplicitReturns": true,
