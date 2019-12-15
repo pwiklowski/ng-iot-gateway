@@ -10,4 +10,4 @@ RUN npm run build
 
 EXPOSE 8000
 EXPOSE 8080
-CMD [ "node", "dist/index.js" ]
+CMD [ "node", "build/src/index.js" ]
