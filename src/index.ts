@@ -8,7 +8,7 @@ import ControllerList from './ControllerList';
 
 import { Validator } from 'jsonschema';
 import ControllerConnection from './ControllerConnection';
-
+import { version } from '../package.json';
 const URL_CTRL = '/controller';
 const URL_DEV = '/device';
 
@@ -61,7 +61,7 @@ app.use(function(req: any, res: any, next: any) {
 
 (async () => {
   app.get('/', (req: express.Request, res: express.Response) => {
-    res.send('hello world2');
+    res.send(version);
   });
 
   wss.on('connection', (ws: WebSocket, req: any) => {
