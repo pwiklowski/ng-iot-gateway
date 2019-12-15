@@ -90,9 +90,9 @@ app.use(function(req: any, res: any, next: any) {
     res.json(deviceList.getDeviceVariableValue(req.params.deviceId, req.params.variable));
   });
 
-  app.post('/device/:deviceId/:variable/value', (req: express.Request, res: express.Response) => {
+  app.post('/device/:deviceUuid/:variableUuid/value', (req: express.Request, res: express.Response) => {
     const value = req.body;
-    const variable = deviceList.getDeviceVariable(req.params.deviceId, req.params.variable);
+    const variable = deviceList.getDeviceVariable(req.params.deviceUuid, req.params.variableUuid);
 
     if (!variable) {
       res.statusCode = 404;
