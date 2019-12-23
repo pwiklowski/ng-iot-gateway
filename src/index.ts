@@ -1,4 +1,3 @@
-import express from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
 
@@ -6,26 +5,15 @@ import DeviceConnection from './DeviceConnection';
 import DeviceList from './DevicesList';
 import ControllerList from './ControllerList';
 
-import { Validator } from 'jsonschema';
 import ControllerConnection from './ControllerConnection';
-import { version } from '../package.json';
 import { username, password } from 'auth.json';
 import * as Url from 'url';
 
 import axios, { AxiosBasicCredentials } from 'axios';
+import WebServer from './WebServer';
 
 const URL_CTRL = '/controller';
 const URL_DEV = '/device';
-
-const app: any = express();
-app.use(express.json());
-app.use(
-  express.urlencoded({
-    extended: true,
-    limit: '100mb',
-    parameterLimit: 1000000
-  })
-);
 
 const websocketServer = http.createServer();
 const wss = new WebSocket.Server({ noServer: true });
@@ -76,8 +64,6 @@ setInterval(function ping() {
 let ctrlList = new ControllerList();
 let deviceList = new DeviceList(ctrlList);
 
-const validator = new Validator();
-
 const authorize = async (token) => {
   const auth: AxiosBasicCredentials = { username, password };
 
@@ -89,55 +75,9 @@ const authorize = async (token) => {
   }
 };
 
-app.use(function(req: any, res: any, next: any) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
-
 (async () => {
-  app.get('/', (req: express.Request, res: express.Response) => {
-    res.send(version);
-  });
-
-  app.get('/devices', (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDevices());
-  });
-
-  app.get('/device/:deviceId', (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDevice(req.params.deviceId));
-  });
-
-  app.get('/device/:deviceId/:variable', (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDeviceVariable(req.params.deviceId, req.params.variable));
-  });
-
-  app.get('/device/:deviceId/:variable/value', (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDeviceVariableValue(req.params.deviceId, req.params.variable));
-  });
-
-  app.post('/device/:deviceUuid/:variableUuid/value', (req: express.Request, res: express.Response) => {
-    const value = req.body;
-    const variable = deviceList.getDeviceVariable(req.params.deviceUuid, req.params.variableUuid);
-
-    if (!variable) {
-      res.statusCode = 404;
-      return res.json({});
-    }
-
-    if (!variable.access.includes('w')) {
-      res.statusCode = 405;
-      return res.json({});
-    }
-
-    const validationResponse = validator.validate(value, variable.schema);
-    if (validationResponse.valid) {
-      return res.json(deviceList.setDeviceVariableValue(req.params.deviceUuid, req.params.variableUuid, value));
-    } else {
-      res.statusCode = 400;
-      return res.json({ error: validationResponse.errors.map((error) => error.message) });
-    }
-  });
+  console.log('start server');
+  const app = WebServer(deviceList);
 
   app.listen(8080);
   websocketServer.listen(8000);
