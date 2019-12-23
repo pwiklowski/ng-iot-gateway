@@ -9,6 +9,11 @@ import ControllerList from './ControllerList';
 import { Validator } from 'jsonschema';
 import ControllerConnection from './ControllerConnection';
 import { version } from '../package.json';
+import { username, password } from 'auth.json';
+import * as Url from 'url';
+
+import axios, { AxiosBasicCredentials } from 'axios';
+
 const URL_CTRL = '/controller';
 const URL_DEV = '/device';
 
@@ -22,15 +27,37 @@ app.use(
   })
 );
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ port: 8000 });
+const websocketServer = http.createServer();
+const wss = new WebSocket.Server({ noServer: true });
 
-wss.on('connection', function connection(ws) {
-  (ws as any).isAlive = true;
+wss.on('connection', (ws: any) => {
+  ws.isAlive = true;
   ws.on('pong', () => {
-    console.log('pong');
-    (ws as any).isAlive = true;
+    ws.isAlive = true;
   });
+});
+
+websocketServer.on('upgrade', async (request, socket, head) => {
+  const url = Url.parse(request.url, true);
+
+  if (url.query.token && (await authorize(url.query.token))) {
+    wss.handleUpgrade(request, socket, head, function done(ws) {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+wss.on('connection', (ws: WebSocket, req: any) => {
+  const url = Url.parse(req.url);
+  if (url.pathname === URL_CTRL) {
+    ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
+  } else if (url.pathname === URL_DEV) {
+    deviceList.add(new DeviceConnection(ws));
+  } else {
+    ws.close();
+  }
 });
 
 setInterval(function ping() {
@@ -46,12 +73,21 @@ setInterval(function ping() {
   });
 }, 10000);
 
-let client = null;
-
 let ctrlList = new ControllerList();
 let deviceList = new DeviceList(ctrlList);
 
 const validator = new Validator();
+
+const authorize = async (token) => {
+  const auth: AxiosBasicCredentials = { username, password };
+
+  try {
+    const response = await axios.post('https://auth.wiklosoft.com/v1/oauth/introspect', new URLSearchParams({ token }), { auth });
+    return response.data.active;
+  } catch (error) {
+    return false;
+  }
+};
 
 app.use(function(req: any, res: any, next: any) {
   res.header('Access-Control-Allow-Origin', '*');
@@ -62,16 +98,6 @@ app.use(function(req: any, res: any, next: any) {
 (async () => {
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
-  });
-
-  wss.on('connection', (ws: WebSocket, req: any) => {
-    if (req.url === URL_CTRL) {
-      ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
-    } else if (req.url === URL_DEV) {
-      deviceList.add(new DeviceConnection(ws));
-    } else {
-      ws.close();
-    }
   });
 
   app.get('/devices', (req: express.Request, res: express.Response) => {
@@ -114,4 +140,5 @@ app.use(function(req: any, res: any, next: any) {
   });
 
   app.listen(8080);
+  websocketServer.listen(8000);
 })();
