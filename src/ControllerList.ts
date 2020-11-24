@@ -8,11 +8,11 @@ export default class ControllerList extends Array<ControllerConnection> {
     Object.setPrototypeOf(this, Object.create(ControllerList.prototype));
   }
 
-  notifyChange(id: String, variable: string, value: object) {
+  notifyChange(id: String, variableUuid: string, value: object) {
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.Notification,
-        args: { id, variable, value }
+        args: { id, variableUuid, value },
       };
 
       connection.sendRequest(notification);
@@ -24,7 +24,7 @@ export default class ControllerList extends Array<ControllerConnection> {
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.ValueUpdated,
-        args: { deviceUuid, variableUuid, value }
+        args: { deviceUuid, variableUuid, value },
       };
       connection.sendRequest(notification);
     });
@@ -34,7 +34,7 @@ export default class ControllerList extends Array<ControllerConnection> {
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.DeviceConnected,
-        args: { device }
+        args: { device },
       };
       connection.sendRequest(notification);
     });
@@ -44,7 +44,7 @@ export default class ControllerList extends Array<ControllerConnection> {
     this.map((connection) => {
       const notification: Request = {
         type: MessageType.DeviceDisconnected,
-        args: { id }
+        args: { id },
       };
       connection.sendRequest(notification);
     });

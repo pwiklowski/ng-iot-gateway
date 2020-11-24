@@ -71,7 +71,7 @@ export default class DeviceList extends Array<DeviceConnection> {
       if (deviceConnection) {
         deviceConnection.sendRequest({
           type: MessageType.SetValue,
-          args: { deviceUuid, variableUuid, value }
+          args: { deviceUuid, variableUuid, value },
         });
       }
 

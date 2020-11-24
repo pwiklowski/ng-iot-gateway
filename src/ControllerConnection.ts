@@ -32,14 +32,14 @@ export default class ControllerConnection extends WebsocketConnection {
         break;
       case MessageType.GetDevices:
         this.sendResponse(msg, {
-          res: { devices: this.deviceList.map((device) => device.getConfig()) },
+          res: [...this.deviceList.map((device) => device.getConfig())],
         });
         break;
       case MessageType.GetDevice: {
         const deviceUuid = msg.args.deviceUuid;
         const deviceConfig: DeviceConfig | null = this.deviceList.getDevice(deviceUuid);
 
-        this.sendResponse(msg, { res: { deviceConfig } });
+        this.sendResponse(msg, { res: { ...deviceConfig } });
         break;
       }
       case MessageType.SetValue:
