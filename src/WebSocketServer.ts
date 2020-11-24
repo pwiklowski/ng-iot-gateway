@@ -8,6 +8,7 @@ import DeviceConnection from './DeviceConnection';
 import axios, { AxiosBasicCredentials } from 'axios';
 import ControllerList from 'ControllerList';
 import DeviceList from 'DevicesList';
+import { AuthorizedWebSocket } from 'WebsocketConnection';
 
 const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
   const URL_CTRL = '/controller';
@@ -21,9 +22,11 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
 
     try {
       const response = await axios.post('https://auth.wiklosoft.com/v1/oauth/introspect', new URLSearchParams({ token }), { auth });
-      return response.data.active;
+      console.log(response.data);
+      return { authorized: response.data.active, username: response.data.username };
     } catch (error) {
-      return false;
+      console.error(error);
+      return { authorized: false, username: null };
     }
   };
 
@@ -36,24 +39,32 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
 
   websocketServer.on('upgrade', async (request, socket, head) => {
     const url = Url.parse(request.url, true);
-
-    if (url.query.token && (await authorize(url.query.token))) {
-      wss.handleUpgrade(request, socket, head, function done(ws) {
-        wss.emit('connection', ws, request);
-      });
-    } else {
+    console.log('upgrade', request.url);
+    if (!url.query.token) {
+      console.log('destroy');
       socket.destroy();
+    } else {
+      const { authorized, username } = await authorize(url.query.token);
+
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        if (authorized) {
+          (ws as AuthorizedWebSocket).username = username;
+          wss.emit('connection', ws, request);
+        } else {
+          ws.close(4403);
+        }
+      });
     }
   });
 
-  wss.on('connection', (ws: WebSocket, req: any) => {
+  wss.on('connection', (ws: AuthorizedWebSocket, req: any) => {
     const url = Url.parse(req.url);
     if (url.pathname === URL_CTRL) {
       ctrlList.push(new ControllerConnection(ws, ctrlList, deviceList));
     } else if (url.pathname === URL_DEV) {
       deviceList.add(new DeviceConnection(ws));
     } else {
-      ws.close();
+      ws.close(4403);
     }
   });
 

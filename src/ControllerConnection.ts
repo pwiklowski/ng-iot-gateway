@@ -1,16 +1,17 @@
 import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
-import WebsocketConnection from './WebsocketConnection';
+import WebsocketConnection, { AuthorizedWebSocket } from './WebsocketConnection';
 import * as WebSocket from 'ws';
 import ControllerList from './ControllerList';
 import DeviceList from './DevicesList';
 import { Validator } from 'jsonschema';
 import DeviceConnection from './DeviceConnection';
+
 export default class ControllerConnection extends WebsocketConnection {
   deviceList: DeviceList;
   controllerList: ControllerList;
   validator: Validator;
 
-  constructor(socket: WebSocket, controllerList: ControllerList, deviceList: DeviceList) {
+  constructor(socket: AuthorizedWebSocket, controllerList: ControllerList, deviceList: DeviceList) {
     super(socket);
     this.deviceList = deviceList;
     this.controllerList = controllerList;
@@ -31,7 +32,7 @@ export default class ControllerConnection extends WebsocketConnection {
         break;
       case MessageType.GetDevices:
         this.sendResponse(msg, {
-          res: { devices: this.deviceList.map((device) => device.getConfig()) }
+          res: { devices: this.deviceList.map((device) => device.getConfig()) },
         });
         break;
       case MessageType.GetDevice: {
@@ -63,7 +64,7 @@ export default class ControllerConnection extends WebsocketConnection {
           const updatedValue = this.deviceList.setDeviceVariableValue(deviceUuid, variableUuid, value);
 
           this.sendResponse(msg, {
-            res: { value: updatedValue }
+            res: { value: updatedValue },
           });
         } else {
           console.error('unable to validate new value', value);

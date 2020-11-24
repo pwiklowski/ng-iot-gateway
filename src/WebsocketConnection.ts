@@ -1,12 +1,16 @@
 import * as WebSocket from 'ws';
 import { Request, Response, DeviceConfig } from '@wiklosoft/ng-iot';
 
+export interface AuthorizedWebSocket extends WebSocket {
+  username: string;
+}
+
 export default abstract class DeviceConnection {
-  socket: WebSocket;
+  socket: AuthorizedWebSocket;
   callbacks: Map<number, Function>;
   config!: DeviceConfig;
 
-  constructor(socket: WebSocket) {
+  constructor(socket: AuthorizedWebSocket) {
     this.callbacks = new Map();
     this.socket = socket;
     this.socket.on('message', (message: string) => {
@@ -39,11 +43,17 @@ export default abstract class DeviceConnection {
     if (callback !== undefined && req.reqId) {
       this.callbacks.set(req.reqId, callback);
     }
+    console.log('send request', req);
     this.socket.send(JSON.stringify(req));
   }
 
   sendResponse(req: Request, res: Response) {
+    console.log('send response', res);
     res.resId = req.reqId;
     this.socket.send(JSON.stringify(res));
+  }
+
+  getUsername() {
+    return this.socket.username;
   }
 }
