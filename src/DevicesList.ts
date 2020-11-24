@@ -15,6 +15,7 @@ export default class DeviceList extends Array<DeviceConnection> {
     item.onDeviceConnected((config: DeviceConfig) => {
       this.controllerList.deviceAdded(config);
       this.push(item);
+      this.controllerList.deviceListChanged(this.getDevices());
     });
 
     item.onDeviceDisconnected(() => {
@@ -24,6 +25,7 @@ export default class DeviceList extends Array<DeviceConnection> {
       if (index > -1) {
         this.splice(index, 1);
       }
+      this.controllerList.deviceListChanged(this.getDevices());
     });
 
     item.onValueUpdated((variableUuid: string, value: object) => {

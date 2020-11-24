@@ -49,4 +49,15 @@ export default class ControllerList extends Array<ControllerConnection> {
       connection.sendRequest(notification);
     });
   }
+
+  deviceListChanged(devices) {
+    this.map((connection) => {
+      const notification: Request = {
+        type: MessageType.DeviceListChanged,
+        args: { devices },
+      };
+
+      connection.sendRequest(notification);
+    });
+  }
 }
