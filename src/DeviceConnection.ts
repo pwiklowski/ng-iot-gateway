@@ -9,7 +9,7 @@ export default class DeviceConnection extends WebsocketConnection {
   eventCallbacks: EventCallbacks = {
     deviceConnected: new Array(),
     deviceDiconnected: new Array(),
-    valueUpdated: new Array()
+    valueUpdated: new Array(),
   };
 
   getConfig(): DeviceConfig {

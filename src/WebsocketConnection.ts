@@ -43,12 +43,10 @@ export default abstract class DeviceConnection {
     if (callback !== undefined && req.reqId) {
       this.callbacks.set(req.reqId, callback);
     }
-    console.log('send request', req);
     this.socket.send(JSON.stringify(req));
   }
 
   sendResponse(req: Request, res: Response) {
-    console.log('send response', res);
     res.resId = req.reqId;
     this.socket.send(JSON.stringify(res));
   }
