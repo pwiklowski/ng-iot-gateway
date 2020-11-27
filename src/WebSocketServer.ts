@@ -9,10 +9,9 @@ import DeviceList from 'DevicesList';
 import { AuthorizedWebSocket } from 'WebsocketConnection';
 import { authorizeWebSocket } from './auth';
 
+export const URL_CTRL = '/controller';
+export const URL_DEV = '/device';
 const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
-  const URL_CTRL = '/controller';
-  const URL_DEV = '/device';
-
   const websocketServer = http.createServer();
   const wss = new WebSocket.Server({ noServer: true });
 
@@ -28,11 +27,11 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
     if (!url.query.token) {
       socket.destroy();
     } else {
-      const { authorized, username } = await authorizeWebSocket(url.query.token);
+      const { authorized, username } = await authorizeWebSocket(url.query.token, url.pathname);
 
       wss.handleUpgrade(request, socket, head, (ws) => {
         if (authorized) {
-          (ws as AuthorizedWebSocket).username = username;
+          (ws as AuthorizedWebSocket).username = username!;
           wss.emit('connection', ws, request);
         } else {
           ws.close(4403);
