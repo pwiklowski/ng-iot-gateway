@@ -1,47 +1,47 @@
-import * as WebSocket from 'ws';
-import { MessageType, Request, Response, DeviceConfig } from '@wiklosoft/ng-iot';
+import { MessageType, DeviceConfig } from '@wiklosoft/ng-iot';
 import DeviceConnection from './DeviceConnection';
-import ControllerList from './ControllerList';
+import { Gateway } from './index';
 
 export default class DeviceList extends Array<DeviceConnection> {
-  controllerList: ControllerList;
-  constructor(controllerList: ControllerList) {
+  gateway: Gateway;
+  constructor(gateway: Gateway) {
     super();
-    this.controllerList = controllerList;
+    this.gateway = gateway;
     Object.setPrototypeOf(this, Object.create(DeviceList.prototype));
   }
 
   public add(item: DeviceConnection) {
     item.onDeviceConnected((config: DeviceConfig) => {
-      this.controllerList.deviceAdded(config);
+      this.gateway.getControllerList().deviceAdded(config);
       this.push(item);
-      this.controllerList.deviceListChanged(this.getDevices());
+      console.log('device connected', config.deviceUuid, config.name);
+      this.gateway.getControllerList().deviceListChanged();
     });
 
     item.onDeviceDisconnected(() => {
       console.log('device disconnected', item.getConfig().deviceUuid, item.getConfig().name);
-      this.controllerList.deviceRemoved(item.getConfig().deviceUuid);
+      this.gateway.getControllerList().deviceRemoved(item.getConfig().deviceUuid);
       const index = this.indexOf(item, 0);
       if (index > -1) {
         this.splice(index, 1);
       }
-      this.controllerList.deviceListChanged(this.getDevices());
+      this.gateway.getControllerList().deviceListChanged();
     });
 
     item.onValueUpdated((variableUuid: string, value: object) => {
-      this.controllerList.valueUpdated(item.getConfig().deviceUuid, variableUuid, value);
+      this.gateway.getControllerList().valueUpdated(item.getConfig().deviceUuid, variableUuid, value);
     });
   }
 
-  public getDevices() {
-    return this.map((connection) => {
+  public getDevices(username: string) {
+    return this.filter((connection) => connection.getUsername() === username).map((connection) => {
       const { name, deviceUuid } = connection.getConfig();
       return { name, deviceUuid };
     });
   }
 
-  public getDeviceVariable(id: String, variable: string) {
-    const config = this.getDevice(id);
+  public getDeviceVariable(username: string, id: String, variable: string) {
+    const config = this.getDevice(username, id);
 
     if (config && config.vars.hasOwnProperty(variable)) {
       return config.vars[variable];
@@ -50,8 +50,8 @@ export default class DeviceList extends Array<DeviceConnection> {
     }
   }
 
-  public getDeviceVariableValue(id: String, variable: string) {
-    const config = this.getDevice(id);
+  public getDeviceVariableValue(username: string, id: String, variable: string) {
+    const config = this.getDevice(username, id);
 
     if (config && config.vars.hasOwnProperty(variable)) {
       return config.vars[variable].value;
@@ -60,8 +60,8 @@ export default class DeviceList extends Array<DeviceConnection> {
     }
   }
 
-  public setDeviceVariableValue(deviceUuid: String, variableUuid: string, value: object) {
-    const config = this.getDevice(deviceUuid);
+  public setDeviceVariableValue(username: string, deviceUuid: String, variableUuid: string, value: object) {
+    const config = this.getDevice(username, deviceUuid);
 
     if (config && config.vars.hasOwnProperty(variableUuid)) {
       config.vars[variableUuid].value = value;
@@ -84,11 +84,14 @@ export default class DeviceList extends Array<DeviceConnection> {
   }
 
   public notifyChange(id: String, variable: string, value: object) {
-    this.controllerList.notifyChange(id, variable, value);
+    this.gateway.getControllerList().notifyChange(id, variable, value);
   }
 
-  public getDevice(deviceUuid: String) {
+  public getDevice(username: string, deviceUuid: String) {
     const device = this.find((connection) => {
+      if (connection.getUsername() !== username) {
+        return false;
+      }
       return connection.getConfig().deviceUuid === deviceUuid;
     });
 

@@ -1,11 +1,14 @@
-import * as WebSocket from 'ws';
-import { MessageType, Request, Response, DeviceConfig } from '@wiklosoft/ng-iot';
+import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import ControllerConnection from './ControllerConnection';
+import { Gateway } from './index';
 
 export default class ControllerList extends Array<ControllerConnection> {
-  constructor() {
+  gateway: Gateway;
+
+  constructor(gateway: Gateway) {
     super();
     Object.setPrototypeOf(this, Object.create(ControllerList.prototype));
+    this.gateway = gateway;
   }
 
   notifyChange(id: String, variableUuid: string, value: object) {
@@ -50,8 +53,10 @@ export default class ControllerList extends Array<ControllerConnection> {
     });
   }
 
-  deviceListChanged(devices) {
+  deviceListChanged() {
     this.map((connection) => {
+      const devices = this.gateway.getDeviceList().getDevices(connection.getUsername());
+
       const notification: Request = {
         type: MessageType.DeviceListChanged,
         args: { devices },

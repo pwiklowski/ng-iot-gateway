@@ -4,14 +4,33 @@ import ControllerList from './ControllerList';
 import WebServer from './WebServer';
 import WebSocketServer from './WebSocketServer';
 
-let ctrlList = new ControllerList();
-let deviceList = new DeviceList(ctrlList);
+export class Gateway {
+  ctrlList: ControllerList;
+  deviceList: DeviceList;
+  constructor() {
+    this.ctrlList = new ControllerList(this);
+    this.deviceList = new DeviceList(this);
+  }
+
+  getDeviceList() {
+    return this.deviceList;
+  }
+
+  getControllerList() {
+    return this.ctrlList;
+  }
+
+  start() {
+    const app = WebServer(this.deviceList);
+    const websocketServer = WebSocketServer(this.ctrlList, this.deviceList);
+
+    app.listen(8080);
+    websocketServer.listen(8000);
+  }
+}
 
 (async () => {
+  const gateway = new Gateway();
   console.log('start server');
-  const app = WebServer(deviceList);
-  const websocketServer = WebSocketServer(ctrlList, deviceList);
-
-  app.listen(8080);
-  websocketServer.listen(8000);
+  gateway.start();
 })();

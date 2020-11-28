@@ -32,12 +32,12 @@ export default class ControllerConnection extends WebsocketConnection {
         break;
       case MessageType.GetDevices:
         this.sendResponse(msg, {
-          res: [...this.deviceList.map((device) => device.getConfig())],
+          res: [...this.deviceList.getDevices(this.getUsername())],
         });
         break;
       case MessageType.GetDevice: {
         const deviceUuid = msg.args.deviceUuid;
-        const deviceConfig: DeviceConfig | null = this.deviceList.getDevice(deviceUuid);
+        const deviceConfig: DeviceConfig | null = this.deviceList.getDevice(this.getUsername(), deviceUuid);
 
         this.sendResponse(msg, { res: { ...deviceConfig } });
         break;
@@ -47,7 +47,7 @@ export default class ControllerConnection extends WebsocketConnection {
         const variableUuid = msg.args.variableUuid;
         const value = msg.args.value;
 
-        const variable = this.deviceList.getDeviceVariable(deviceUuid, variableUuid);
+        const variable = this.deviceList.getDeviceVariable(this.getUsername(), deviceUuid, variableUuid);
 
         if (!variable) {
           console.error('unable to find variable with specified id');
@@ -61,7 +61,7 @@ export default class ControllerConnection extends WebsocketConnection {
 
         const validationResponse = this.validator.validate(value, variable.schema);
         if (validationResponse.valid) {
-          const updatedValue = this.deviceList.setDeviceVariableValue(deviceUuid, variableUuid, value);
+          const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
 
           this.sendResponse(msg, {
             res: { value: updatedValue },

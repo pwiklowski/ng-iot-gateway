@@ -4,6 +4,10 @@ import { version } from '../package.json';
 import DeviceList from 'DevicesList.js';
 import { authorizeHttp } from './auth';
 
+interface AuthorizedRequest extends express.Request {
+  user?: any;
+}
+
 const WebServer = (deviceList: DeviceList) => {
   const app: express.Express = express();
 
@@ -27,25 +31,25 @@ const WebServer = (deviceList: DeviceList) => {
     res.send(version);
   });
 
-  app.get('/devices', authorizeHttp, (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDevices());
+  app.get('/devices', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
+    res.json(deviceList.getDevices(req.user.name));
   });
 
-  app.get('/device/:deviceId', authorizeHttp, (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDevice(req.params.deviceId));
+  app.get('/device/:deviceId', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
+    res.json(deviceList.getDevice(req.user.name, req.params.deviceId));
   });
 
-  app.get('/device/:deviceId/:variable', authorizeHttp, (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDeviceVariable(req.params.deviceId, req.params.variable));
+  app.get('/device/:deviceId/:variable', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
+    res.json(deviceList.getDeviceVariable(req.user.name, req.params.deviceId, req.params.variable));
   });
 
-  app.get('/device/:deviceId/:variable/value', authorizeHttp, (req: express.Request, res: express.Response) => {
-    res.json(deviceList.getDeviceVariableValue(req.params.deviceId, req.params.variable));
+  app.get('/device/:deviceId/:variable/value', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
+    res.json(deviceList.getDeviceVariableValue(req.user.name, req.params.deviceId, req.params.variable));
   });
 
-  app.post('/device/:deviceUuid/:variableUuid/value', authorizeHttp, (req: express.Request, res: express.Response) => {
+  app.post('/device/:deviceUuid/:variableUuid/value', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
     const value = req.body;
-    const variable = deviceList.getDeviceVariable(req.params.deviceUuid, req.params.variableUuid);
+    const variable = deviceList.getDeviceVariable(req.user.name, req.params.deviceUuid, req.params.variableUuid);
 
     if (!variable) {
       res.statusCode = 404;
@@ -60,7 +64,7 @@ const WebServer = (deviceList: DeviceList) => {
     const validationResponse = validator.validate(value, variable.schema);
     if (validationResponse.valid) {
       console.log('set ', req.params.deviceUuid, req.params.variableUuid, value);
-      return res.json(deviceList.setDeviceVariableValue(req.params.deviceUuid, req.params.variableUuid, value));
+      return res.json(deviceList.setDeviceVariableValue(req.user.name, req.params.deviceUuid, req.params.variableUuid, value));
     } else {
       res.statusCode = 400;
       return res.json({ error: validationResponse.errors.map((error) => error.message) });
