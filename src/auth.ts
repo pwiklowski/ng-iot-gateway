@@ -66,7 +66,7 @@ export async function authorizeWebSocket(token: string | string[], path: string 
   } catch (e) {
     console.error(e);
   }
-  return { authorized: true, username: undefined };
+  return { authorized: false, username: undefined };
 }
 
 export const authorizeHttp = expressJwt({
