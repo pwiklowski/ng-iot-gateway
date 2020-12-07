@@ -29,7 +29,9 @@ export default class DeviceConnection extends WebsocketConnection {
   }
 
   onDisconnect() {
-    this.eventCallbacks.deviceDiconnected.map((callback) => callback(this.config.deviceUuid));
+    if (this.config) {
+      this.eventCallbacks.deviceDiconnected.map((callback) => callback(this.config.deviceUuid));
+    }
   }
 
   onDeviceDisconnected(callback: Function) {
