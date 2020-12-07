@@ -45,7 +45,6 @@ export default class ControllerConnection extends WebsocketConnection {
       case MessageType.SetValue:
         const deviceUuid = msg.args.deviceUuid;
         const variableUuid = msg.args.variableUuid;
-        const value = JSON.parse(msg.args.value);
 
         const variable = this.deviceList.getDeviceVariable(this.getUsername(), deviceUuid, variableUuid);
 
@@ -59,15 +58,21 @@ export default class ControllerConnection extends WebsocketConnection {
           return this.sendResponse(msg, { res: null });
         }
 
-        const validationResponse = this.validator.validate(value, variable.schema);
-        if (validationResponse.valid) {
-          const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
+        try {
+          const value = JSON.parse(msg.args.value);
+          const validationResponse = this.validator.validate(value, variable.schema);
+          if (validationResponse.valid) {
+            const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
 
-          this.sendResponse(msg, {
-            res: { value: updatedValue },
-          });
-        } else {
-          console.error('unable to validate new value', value);
+            this.sendResponse(msg, {
+              res: { value: updatedValue },
+            });
+          } else {
+            console.error('unable to validate new value', value);
+            return this.sendResponse(msg, { res: null });
+          }
+        } catch (e) {
+          console.error(e);
           return this.sendResponse(msg, { res: null });
         }
     }
