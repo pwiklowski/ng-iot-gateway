@@ -11,6 +11,7 @@ import { authorizeWebSocket } from './auth';
 
 export const URL_CTRL = '/controller';
 export const URL_DEV = '/device';
+
 const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
   const websocketServer = http.createServer();
   const wss = new WebSocket.Server({ noServer: true });
@@ -34,7 +35,10 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
           (ws as AuthorizedWebSocket).username = username!;
           wss.emit('connection', ws, request);
         } else {
-          ws.close(4403);
+          console.log('close unauthorized ');
+          setTimeout(() => {
+            ws.close(4403);
+          }, 100);
         }
       });
     }
