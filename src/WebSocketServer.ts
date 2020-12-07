@@ -62,7 +62,7 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
       (ws as any).isAlive = false;
       ws.ping(() => {});
     });
-  }, 10000);
+  }, 5000);
 
   return websocketServer;
 };
