@@ -56,16 +56,15 @@ const WebSocketServer = (ctrlList: ControllerList, deviceList: DeviceList) => {
     }
   });
 
-  setInterval(function ping() {
-    wss.clients.forEach(function each(ws) {
+  setInterval(() => {
+    for (let ws of wss.clients) {
       if ((ws as any).isAlive === false) {
-        console.log('remove dead connection');
-        return ws.terminate();
+        ws.terminate();
+      } else {
+        (ws as any).isAlive = false;
+        ws.ping(() => {});
       }
-
-      (ws as any).isAlive = false;
-      ws.ping(() => {});
-    });
+    }
   }, 5000);
 
   return websocketServer;

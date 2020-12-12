@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "noImplicitAny": false,
     "strict": true,
+    "downlevelIteration": true,
     "outDir": "build",
     "lib": ["es6", "es7", "dom"],
     "baseUrl": "src",
