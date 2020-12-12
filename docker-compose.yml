@@ -1,0 +1,28 @@
+version: '2'
+services:
+  ng-iot-gateway:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.web.rule=Host(`iot.wiklosoft.com`)'
+      - 'traefik.http.routers.web.entrypoints=websecure'
+      - 'traefik.http.routers.web.tls.certresolver=myresolver'
+
+      - 'traefik.http.routers.websocket.rule=Host(`iot.wiklosoft.com`) && PathPrefix(`/connect`)'
+      - 'traefik.http.routers.websocket.middlewares=websocket-stripprefix'
+      - 'traefik.http.middlewares.websocket-stripprefix.stripprefix.prefixes=/connect'
+      - 'traefik.http.routers.websocket.entrypoints=websecure'
+      - 'traefik.http.routers.websocket.tls.certresolver=myresolver'
+
+      - 'traefik.http.routers.web.service=web'
+      - 'traefik.http.routers.websocket.service=websocket'
+      - 'traefik.http.services.web.loadbalancer.server.port=8080'
+      - 'traefik.http.services.websocket.loadbalancer.server.port=8000'
+
+networks:
+  default:
+    external:
+      name: pwiklowski_default # make sure that it is correct
