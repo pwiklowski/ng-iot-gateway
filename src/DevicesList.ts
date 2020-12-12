@@ -12,20 +12,20 @@ export default class DeviceList extends Array<DeviceConnection> {
 
   public add(item: DeviceConnection) {
     item.onDeviceConnected((config: DeviceConfig) => {
-      this.gateway.getControllerList().deviceAdded(config);
       this.push(item);
       console.log('device connected', config.deviceUuid, config.name);
-      this.gateway.getControllerList().deviceListChanged();
+      this.gateway.getControllerList().deviceAdded(config);
     });
 
     item.onDeviceDisconnected(() => {
       console.log('device disconnected', item.getConfig().deviceUuid, item.getConfig().name);
-      this.gateway.getControllerList().deviceRemoved(item.getConfig().deviceUuid);
+
       const index = this.indexOf(item, 0);
       if (index > -1) {
         this.splice(index, 1);
       }
-      this.gateway.getControllerList().deviceListChanged();
+
+      this.gateway.getControllerList().deviceRemoved(item.getConfig().deviceUuid);
     });
 
     item.onValueUpdated((variableUuid: string, value: object) => {
