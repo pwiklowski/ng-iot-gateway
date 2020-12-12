@@ -14,11 +14,15 @@ export default abstract class DeviceConnection {
     this.callbacks = new Map();
     this.socket = socket;
     this.socket.on('message', (message: string) => {
-      const msg = JSON.parse(message);
-      if (msg.resId !== undefined) {
-        this.handleResponse(msg);
-      } else {
-        this.handleRequest(msg);
+      try {
+        const msg = JSON.parse(message);
+        if (msg.resId !== undefined) {
+          this.handleResponse(msg);
+        } else {
+          this.handleRequest(msg);
+        }
+      } catch (e) {
+        console.error(e);
       }
     });
 
