@@ -4,6 +4,16 @@ import ControllerList from './ControllerList';
 import WebServer from './WebServer';
 import WebSocketServer from './WebSocketServer';
 
+const logCopy = console.log.bind(console);
+
+console.log = function () {
+  if (arguments.length) {
+    var timestamp = new Date().toJSON(); // The easiest way I found to get milliseconds in the timestamp
+    var args: any = arguments;
+    args[0] = timestamp + ' > ' + arguments[0];
+    logCopy.apply(this, args);
+  }
+};
 export class Gateway {
   ctrlList: ControllerList;
   deviceList: DeviceList;
