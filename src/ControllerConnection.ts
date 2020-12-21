@@ -30,6 +30,11 @@ export default class ControllerConnection extends WebsocketConnection {
       case MessageType.Hello:
         this.config = msg.args[0];
         break;
+      case MessageType.Ping:
+        this.sendResponse(msg, {
+          res: {},
+        });
+        break;
       case MessageType.GetDevices:
         this.sendResponse(msg, {
           res: [...this.deviceList.getDevices(this.getUsername())],
