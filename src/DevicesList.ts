@@ -35,8 +35,7 @@ export default class DeviceList extends Array<DeviceConnection> {
 
   public getDevices(username: string) {
     return this.filter((connection) => connection.getUsername() === username).map((connection) => {
-      const { name, deviceUuid } = connection.getConfig();
-      return { name, deviceUuid };
+      return connection.getConfig();
     });
   }
 
