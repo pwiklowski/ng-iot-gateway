@@ -1,6 +1,6 @@
 import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import ControllerConnection from './ControllerConnection';
-import { Gateway } from './index';
+import Gateway from './Gateway';
 
 export default class ControllerList extends Array<ControllerConnection> {
   gateway: Gateway;
