@@ -1,10 +1,8 @@
 import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import WebsocketConnection, { AuthorizedWebSocket } from './WebsocketConnection';
-import * as WebSocket from 'ws';
 import ControllerList from './ControllerList';
 import DeviceList from './DevicesList';
 import { Validator } from 'jsonschema';
-import DeviceConnection from './DeviceConnection';
 
 export default class ControllerConnection extends WebsocketConnection {
   deviceList: DeviceList;

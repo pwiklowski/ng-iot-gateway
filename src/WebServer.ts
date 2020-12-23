@@ -1,17 +1,22 @@
+import { RuleSchema } from './schemas';
 import express = require('express');
 import { Validator } from 'jsonschema';
 import { version } from '../package.json';
-import DeviceList from 'DevicesList.js';
+import DeviceList from 'DevicesList';
 import { authorizeHttp } from './auth';
+import * as mongo from 'mongodb';
+import { Rule } from '@wiklosoft/ng-iot';
+import { ValidationError, Validator as ExpressValidator } from 'express-json-validator-middleware';
 
 interface AuthorizedRequest extends express.Request {
   user?: any;
 }
 
-const WebServer = (deviceList: DeviceList) => {
+const WebServer = async (deviceList: DeviceList) => {
   const app: express.Express = express();
 
   const validator = new Validator();
+  const expressValidator = new ExpressValidator({ allErrors: true });
 
   app.use(express.json());
   app.use(
@@ -22,13 +27,80 @@ const WebServer = (deviceList: DeviceList) => {
     })
   );
 
+  const client: mongo.MongoClient = await mongo.connect('mongodb://127.0.0.1:27017', {
+    //const client: mongo.MongoClient = await mongo.connect("mongodb://mongo:27017", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  const db = client.db('ng-iot');
+  const rules = db.collection('rules');
+
   app.use(function (req: any, res: any, next: any) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
   });
+
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
+  });
+
+  app.get('/rules', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const allRules = await rules.find({ username: req.user.name }).toArray();
+    return res.json(allRules);
+  });
+
+  app.get('/rule/:ruleId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const ruleId = req.params.ruleId;
+    const rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name })) as Rule;
+    if (rule) {
+      res.json(rule);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.post('/rules', authorizeHttp, <any>expressValidator.validate({ body: RuleSchema }), async (req: AuthorizedRequest, res: express.Response) => {
+    const newRule: Rule = req.body;
+    const username = req.user.name;
+    const rule: Rule = {
+      ...newRule,
+      username,
+    };
+
+    const response = await rules.insertOne(rule);
+    if (response.result.ok === 1) {
+      res.json(response.ops[0]);
+      return;
+    }
+    res.statusCode = 500;
+    res.json(null);
+  });
+
+  app.delete('/rule/:ruleId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const ruleId = req.params.ruleId;
+    const rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name })) as Rule;
+    if (rule) {
+      await rules.deleteOne({ _id: new mongo.ObjectID(ruleId) });
+      res.sendStatus(204);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.patch('/rule/:ruleId', authorizeHttp, <any>expressValidator.validate({ body: RuleSchema }), async (req: AuthorizedRequest, res: express.Response) => {
+    const ruleId = req.params.ruleId;
+    const username = req.user.name;
+
+    let rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username })) as Rule;
+    if (rule) {
+      const ruleUpdate: Rule = req.body;
+      rule = { ...rule, ...ruleUpdate, username };
+      await rules.replaceOne({ _id: new mongo.ObjectID(ruleId) }, rule);
+      return res.json(rule);
+    } else {
+      return res.sendStatus(404);
+    }
   });
 
   app.get('/devices', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
