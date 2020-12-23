@@ -7,6 +7,7 @@ import { authorizeHttp } from './auth';
 import * as mongo from 'mongodb';
 import { Rule } from '@wiklosoft/ng-iot';
 import { ValidationError, Validator as ExpressValidator } from 'express-json-validator-middleware';
+import cors from 'cors';
 
 interface AuthorizedRequest extends express.Request {
   user?: any;
@@ -19,6 +20,12 @@ const WebServer = async (deviceList: DeviceList) => {
   const expressValidator = new ExpressValidator({ allErrors: true });
 
   app.use(express.json());
+  app.use(
+    cors({
+      origin: 'http://localhost:4200',
+      optionsSuccessStatus: 204,
+    })
+  );
   app.use(
     express.urlencoded({
       extended: true,
@@ -33,12 +40,6 @@ const WebServer = async (deviceList: DeviceList) => {
   });
   const db = client.db('ng-iot');
   const rules = db.collection('rules');
-
-  app.use(function (req: any, res: any, next: any) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-  });
 
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
