@@ -30,6 +30,8 @@ export default class DeviceList extends Array<DeviceConnection> {
 
     item.onValueUpdated((variableUuid: string, value: object) => {
       this.gateway.getControllerList().valueUpdated(item.getConfig().deviceUuid, variableUuid, value);
+
+      this.gateway.rulesRunner.valueUpdated(this, item.getUsername(), item.getConfig().deviceUuid, variableUuid, value);
     });
   }
 

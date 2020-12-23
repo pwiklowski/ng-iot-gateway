@@ -12,7 +12,7 @@
   "dependencies": {
     "@types/express": "^4.16.1",
     "@types/jsonschema": "^1.1.1",
-    "@wiklosoft/ng-iot": "^0.0.5",
+    "@wiklosoft/ng-iot": "0.0.8",
     "axios": "^0.19.0",
     "express": "^4.16.4",
     "express-json-validator-middleware": "^2.1.1",
@@ -24,6 +24,7 @@
     "mongodb": "^3.6.3",
     "npm": "^6.9.0",
     "ts-node-dev": "^1.0.0-pre.32",
+    "vm2": "^3.9.2",
     "ws": "^7.0.0"
   },
   "devDependencies": {

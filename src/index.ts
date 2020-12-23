@@ -1,3 +1,4 @@
+import { RulesRunner } from './RulesRunner';
 import DeviceList from './DevicesList';
 import ControllerList from './ControllerList';
 
@@ -17,7 +18,10 @@ console.log = function () {
 export class Gateway {
   ctrlList: ControllerList;
   deviceList: DeviceList;
+  rulesRunner: RulesRunner;
+
   constructor() {
+    this.rulesRunner = new RulesRunner();
     this.ctrlList = new ControllerList(this);
     this.deviceList = new DeviceList(this);
   }
@@ -30,8 +34,9 @@ export class Gateway {
     return this.ctrlList;
   }
 
-  start() {
-    const app = WebServer(this.deviceList);
+  async start() {
+    this.rulesRunner.start();
+    const app = await WebServer(this.deviceList);
     const websocketServer = WebSocketServer(this.ctrlList, this.deviceList);
 
     app.listen(8080);
