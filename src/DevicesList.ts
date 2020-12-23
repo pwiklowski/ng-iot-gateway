@@ -76,12 +76,10 @@ export default class DeviceList extends Array<DeviceConnection> {
           type: MessageType.SetValue,
           args: { deviceUuid, variableUuid, value },
         });
+        return config.vars[variableUuid].value;
       }
-
-      return config.vars[variableUuid].value;
-    } else {
-      return null;
     }
+    return null;
   }
 
   public notifyChange(id: String, variable: string, value: object) {
