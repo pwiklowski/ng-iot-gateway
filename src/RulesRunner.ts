@@ -12,6 +12,7 @@ export class RulesRunner {
   constructor(gateway: Gateway) {
     this.vm = new NodeVM({
       console: 'off',
+      timeout: 100,
     });
     this.gateway = gateway;
   }
