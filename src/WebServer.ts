@@ -9,6 +9,8 @@ import { Rule } from '@wiklosoft/ng-iot';
 import { ValidationError, Validator as ExpressValidator } from 'express-json-validator-middleware';
 import cors from 'cors';
 
+const RULE_PROJECTION = { username: 0, _id: 0 };
+
 interface AuthorizedRequest extends express.Request {
   user?: any;
 }
@@ -46,13 +48,22 @@ const WebServer = async (deviceList: DeviceList) => {
   });
 
   app.get('/rules', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
-    const allRules = await rules.find({ username: req.user.name }).toArray();
+    const allRules = await rules
+      .aggregate([
+        {
+          $match: { username: req.user.name },
+        },
+        {
+          $project: { _id: 0, id: '$_id', name: 1, deviceUuid: 1 },
+        },
+      ])
+      .toArray();
     return res.json(allRules);
   });
 
   app.get('/rule/:ruleId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
     const ruleId = req.params.ruleId;
-    const rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name })) as Rule;
+    const rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name }, { projection: RULE_PROJECTION })) as Rule;
     if (rule) {
       res.json(rule);
     } else {
@@ -92,7 +103,7 @@ const WebServer = async (deviceList: DeviceList) => {
     const ruleId = req.params.ruleId;
     const username = req.user.name;
 
-    let rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username })) as Rule;
+    let rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username }, { projection: RULE_PROJECTION })) as Rule;
     if (rule) {
       const ruleUpdate: Rule = req.body;
       rule = { ...rule, ...ruleUpdate, username };
