@@ -19,7 +19,10 @@ export const RuleSchema: JSONSchema7 = {
     script: {
       type: 'string',
     },
+    name: {
+      type: 'string',
+    },
   },
   type: 'object',
-  required: ['deviceUuid', 'variableUuid', 'script'],
+  required: ['deviceUuid', 'variableUuid', 'script', 'name'],
 };
