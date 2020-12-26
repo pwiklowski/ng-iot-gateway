@@ -2,15 +2,18 @@ import DeviceList from 'DevicesList';
 import { NodeVM, VM } from 'vm2';
 import * as mongo from 'mongodb';
 import { Rule } from '@wiklosoft/ng-iot';
+import Gateway from 'Gateway';
 
 export class RulesRunner {
   vm: VM;
   rules;
+  gateway: Gateway;
 
-  constructor() {
+  constructor(gateway: Gateway) {
     this.vm = new NodeVM({
       console: 'off',
     });
+    this.gateway = gateway;
   }
 
   async start() {
@@ -34,8 +37,16 @@ export class RulesRunner {
     });
 
     rules.forEach((rule: Rule) => {
+      const thiz = this;
       this.vm.setGlobal('log', function () {
         console.log(rule._id, '>', ...arguments);
+
+        const args: IArguments = arguments;
+        let line = new Date().toJSON();
+        for (let i = 0; i < args.length; i++) {
+          line += ' ' + JSON.stringify(args[i]);
+        }
+        thiz.gateway.ctrlList.ruleLog(username, rule._id, line);
       });
       this.vm.run(rule.script);
     });

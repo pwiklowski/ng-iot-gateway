@@ -10,7 +10,7 @@ export default class Gateway {
   rulesRunner: RulesRunner;
 
   constructor() {
-    this.rulesRunner = new RulesRunner();
+    this.rulesRunner = new RulesRunner(this);
     this.ctrlList = new ControllerList(this);
     this.deviceList = new DeviceList(this);
   }

@@ -67,4 +67,14 @@ export default class ControllerList extends Array<ControllerConnection> {
       connection.sendRequest(notification);
     });
   }
+
+  ruleLog(username: string, ruleId: string, ruleLogLine: string) {
+    this.filter((connection) => connection.getUsername() === username).map((connection) => {
+      const notification: Request = {
+        type: MessageType.RuleLog,
+        args: { ruleId, ruleLogLine },
+      };
+      connection.sendRequest(notification);
+    });
+  }
 }
