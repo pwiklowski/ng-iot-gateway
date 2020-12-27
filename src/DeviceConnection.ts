@@ -12,9 +12,6 @@ export default class DeviceConnection extends WebsocketConnection {
     valueUpdated: new Array(),
   };
 
-  getConfig(): DeviceConfig {
-    return this.config;
-  }
 
   handleRequest(msg: Request) {
     switch (msg.type) {
