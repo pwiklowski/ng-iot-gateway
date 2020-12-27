@@ -1,15 +1,16 @@
-import { RuleSchema } from './schemas';
+import { PresetSchema, RuleSchema } from './schemas';
 import express = require('express');
 import { Validator } from 'jsonschema';
 import { version } from '../package.json';
 import DeviceList from 'DevicesList';
 import { authorizeHttp } from './auth';
 import * as mongo from 'mongodb';
-import { Rule } from '@wiklosoft/ng-iot';
-import { ValidationError, Validator as ExpressValidator } from 'express-json-validator-middleware';
+import { Preset, Rule } from '@wiklosoft/ng-iot';
+import { Validator as ExpressValidator } from 'express-json-validator-middleware';
 import cors from 'cors';
 
 const RULE_PROJECTION = { username: 0, _id: 0 };
+const PRESET_PROJECTION = { username: 0, _id: 0 };
 
 interface AuthorizedRequest extends express.Request {
   user?: any;
@@ -42,6 +43,7 @@ const WebServer = async (deviceList: DeviceList) => {
   });
   const db = client.db('ng-iot');
   const rules = db.collection('rules');
+  const presets = db.collection('presets');
 
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
@@ -113,6 +115,78 @@ const WebServer = async (deviceList: DeviceList) => {
       return res.sendStatus(404);
     }
   });
+
+  app.get('/presets', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const allPresets = await presets
+      .aggregate([
+        {
+          $match: { username: req.user.name },
+        },
+        {
+          $project: { _id: 0, id: '$_id', name: 1, variables: 1 },
+        },
+      ])
+      .toArray();
+    return res.json(allPresets);
+  });
+
+  app.get('/preset/:presetId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const presetId = req.params.presetId;
+    const preset = (await presets.findOne({ _id: new mongo.ObjectID(presetId), username: req.user.name }, { projection: PRESET_PROJECTION })) as Preset;
+    if (preset) {
+      res.json(preset);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.post('/presets', authorizeHttp, <any>expressValidator.validate({ body: PresetSchema }), async (req: AuthorizedRequest, res: express.Response) => {
+    const newPreset: Preset = req.body;
+    const username = req.user.name;
+    const preset: Preset = {
+      ...newPreset,
+      username,
+    };
+
+    const response = await presets.insertOne(preset);
+    if (response.result.ok === 1) {
+      res.json(response.ops[0]);
+      return;
+    }
+    res.statusCode = 500;
+    res.json(null);
+  });
+
+  app.delete('/preset/:presetId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const presetId = req.params.presetId;
+    const preset = (await presets.findOne({ _id: new mongo.ObjectID(presetId), username: req.user.name })) as Preset;
+    if (preset) {
+      await presets.deleteOne({ _id: new mongo.ObjectID(presetId) });
+      res.sendStatus(204);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.patch(
+    '/preset/:presetId',
+    authorizeHttp,
+    <any>expressValidator.validate({ body: PresetSchema }),
+    async (req: AuthorizedRequest, res: express.Response) => {
+      const presetId = req.params.presetId;
+      const username = req.user.name;
+
+      let preset = (await presets.findOne({ _id: new mongo.ObjectID(presetId), username }, { projection: PRESET_PROJECTION })) as Preset;
+      if (preset) {
+        const presetUpdate: Preset = req.body;
+        preset = { ...preset, ...presetUpdate, username };
+        await presets.replaceOne({ _id: new mongo.ObjectID(presetId) }, preset);
+        return res.json(preset);
+      } else {
+        return res.sendStatus(404);
+      }
+    }
+  );
 
   app.get('/devices', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
     res.json(deviceList.getDevices(req.user.name));
