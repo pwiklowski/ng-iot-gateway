@@ -2,6 +2,7 @@ import { MessageType, DeviceConfig } from '@wiklosoft/ng-iot';
 import Gateway from './Gateway';
 import DeviceConnection from './DeviceConnection';
 import * as mongo from 'mongodb';
+import { Validator } from 'jsonschema';
 
 export interface Device {
   connection: DeviceConnection | null;
@@ -12,12 +13,14 @@ export interface Device {
 export default class DeviceList extends Array<Device> {
   gateway: Gateway;
   devicesCollection: mongo.Collection;
+  validator: Validator;
 
   constructor(gateway: Gateway, devices: mongo.Collection) {
     super();
     this.devicesCollection = devices;
     this.gateway = gateway;
     Object.setPrototypeOf(this, Object.create(DeviceList.prototype));
+    this.validator = new Validator();
   }
 
   async loadDevicesFromDb() {
@@ -38,6 +41,8 @@ export default class DeviceList extends Array<Device> {
       if (device !== undefined) {
         device.connection = connection;
         device.config.isConnected = true;
+
+        //TODO update devices ?
       } else {
         const device = { config, username: connection.getUsername(), connection };
         device.config.isConnected = true;
@@ -103,12 +108,28 @@ export default class DeviceList extends Array<Device> {
 
     if (device && device.config.vars.hasOwnProperty(variableUuid)) {
       if (device && device.connection) {
-        device.config.vars[variableUuid].value = value;
-        device.connection.sendRequest({
-          type: MessageType.SetValue,
-          args: { deviceUuid, variableUuid, value },
-        });
-        return device.config.vars[variableUuid].value;
+        if (!device.config.vars[variableUuid].access.includes('w')) {
+          console.error('variable is not writable');
+          return null;
+        }
+
+        try {
+          const validationResponse = this.validator.validate(value, device.config.vars[variableUuid].schema);
+          if (validationResponse.valid) {
+            device.config.vars[variableUuid].value = value;
+            device.connection.sendRequest({
+              type: MessageType.SetValue,
+              args: { deviceUuid, variableUuid, value },
+            });
+            return device.config.vars[variableUuid].value;
+          } else {
+            console.error('Unable to validate new value', value);
+            return null;
+          }
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
       }
     }
     return null;

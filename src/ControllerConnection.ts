@@ -2,18 +2,15 @@ import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import WebsocketConnection, { AuthorizedWebSocket } from './WebsocketConnection';
 import ControllerList from './ControllerList';
 import DeviceList from './DevicesList';
-import { Validator } from 'jsonschema';
 
 export default class ControllerConnection extends WebsocketConnection {
   deviceList: DeviceList;
   controllerList: ControllerList;
-  validator: Validator;
 
   constructor(socket: AuthorizedWebSocket, controllerList: ControllerList, deviceList: DeviceList) {
     super(socket);
     this.deviceList = deviceList;
     this.controllerList = controllerList;
-    this.validator = new Validator();
   }
 
   onDisconnect(): void {
@@ -49,35 +46,11 @@ export default class ControllerConnection extends WebsocketConnection {
         const deviceUuid = msg.args.deviceUuid;
         const variableUuid = msg.args.variableUuid;
 
-        const variable = this.deviceList.getDeviceVariable(this.getUsername(), deviceUuid, variableUuid);
+        //TODO make sure that value is always sent as object
 
-        if (!variable) {
-          console.error('unable to find variable with specified id');
-          return this.sendResponse(msg, { res: null });
-        }
-
-        if (!variable.access.includes('w')) {
-          console.error('variable is not writable');
-          return this.sendResponse(msg, { res: null });
-        }
-
-        try {
-          const value = JSON.parse(msg.args.value);
-          const validationResponse = this.validator.validate(value, variable.schema);
-          if (validationResponse.valid) {
-            const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
-
-            this.sendResponse(msg, {
-              res: { value: updatedValue },
-            });
-          } else {
-            console.error('unable to validate new value', value);
-            return this.sendResponse(msg, { res: null });
-          }
-        } catch (e) {
-          console.error(e);
-          return this.sendResponse(msg, { res: null });
-        }
+        const value = JSON.parse(msg.args.value);
+        const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
+        this.sendResponse(msg, { res: updatedValue });
     }
   }
 }
