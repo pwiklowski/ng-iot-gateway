@@ -25,7 +25,7 @@ const WebServer = async (deviceList: DeviceList) => {
   app.use(express.json());
   app.use(
     cors({
-      origin: 'http://localhost:4200',
+      origin: ['http://localhost:4200', 'https://iot-dash.wiklosoft.com'],
       optionsSuccessStatus: 204,
     })
   );
