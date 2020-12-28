@@ -27,7 +27,16 @@ export class RulesRunner {
   }
 
   async valueUpdated(deviceList: DeviceList, username: string, deviceUuid: string, variableUuid: string, value: any) {
-    const rules: Array<Rule> = await this.rules.find({ deviceUuid, variableUuid, username }).toArray();
+    const rules: Array<Rule> = await this.rules
+      .aggregate([
+        {
+          $match: { deviceUuid, variableUuid, username },
+        },
+        {
+          $project: { _id: 0, id: '$_id', script: 1 },
+        },
+      ])
+      .toArray();
 
     this.vm.setGlobal('value', value);
     this.vm.setGlobal('setValue', (deviceUuid, variableUuid, newValue) => {
@@ -40,14 +49,14 @@ export class RulesRunner {
     rules.forEach((rule: Rule) => {
       const thiz = this;
       this.vm.setGlobal('log', function () {
-        console.log(rule._id, '>', ...arguments);
+        console.log(rule.id, '>', ...arguments);
 
         const args: IArguments = arguments;
         let line = new Date().toJSON();
         for (let i = 0; i < args.length; i++) {
           line += ' ' + JSON.stringify(args[i]);
         }
-        thiz.gateway.ctrlList.ruleLog(username, rule._id, line);
+        thiz.gateway.ctrlList.ruleLog(username, rule.id!, line);
       });
       this.vm.run(rule.script);
     });
