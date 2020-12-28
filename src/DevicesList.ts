@@ -100,13 +100,12 @@ export default class DeviceList extends Array<Device> {
     const config = this.getDevice(username, deviceUuid);
 
     if (config && config.vars.hasOwnProperty(variableUuid)) {
-      config.vars[variableUuid].value = value;
-
       const device = this.find((device: Device) => {
         return device.config.deviceUuid === deviceUuid;
       });
 
       if (device && device.connection) {
+        config.vars[variableUuid].value = value;
         device.connection.sendRequest({
           type: MessageType.SetValue,
           args: { deviceUuid, variableUuid, value },
