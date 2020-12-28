@@ -3,16 +3,16 @@ import DeviceList from './DevicesList';
 import { RulesRunner } from './RulesRunner';
 import WebServer from './WebServer';
 import WebSocketServer from './WebSocketServer';
+import * as mongo from 'mongodb';
 
 export default class Gateway {
   ctrlList: ControllerList;
-  deviceList: DeviceList;
+  deviceList: DeviceList | null = null;
   rulesRunner: RulesRunner;
 
   constructor() {
     this.rulesRunner = new RulesRunner(this);
     this.ctrlList = new ControllerList(this);
-    this.deviceList = new DeviceList(this);
   }
 
   getDeviceList() {
@@ -24,7 +24,19 @@ export default class Gateway {
   }
 
   async start() {
+    const client: mongo.MongoClient = await mongo.connect('mongodb://mongo:27017', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    const db = client.db('ng-iot');
+    const devices = db.collection('devices');
+
+    this.deviceList = new DeviceList(this, devices);
+
+    await this.deviceList.loadDevicesFromDb();
+
     this.rulesRunner.start();
+
     const app = await WebServer(this.deviceList);
     const websocketServer = WebSocketServer(this.ctrlList, this.deviceList);
 

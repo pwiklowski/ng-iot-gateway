@@ -1,6 +1,7 @@
 import { MessageType, DeviceConfig } from '@wiklosoft/ng-iot';
 import Gateway from './Gateway';
 import DeviceConnection from './DeviceConnection';
+import * as mongo from 'mongodb';
 
 export interface Device {
   connection: DeviceConnection | null;
@@ -10,13 +11,28 @@ export interface Device {
 
 export default class DeviceList extends Array<Device> {
   gateway: Gateway;
-  constructor(gateway: Gateway) {
+  devicesCollection: mongo.Collection;
+
+  constructor(gateway: Gateway, devices: mongo.Collection) {
     super();
+    this.devicesCollection = devices;
     this.gateway = gateway;
     Object.setPrototypeOf(this, Object.create(DeviceList.prototype));
   }
 
-  public add(connection: DeviceConnection) {
+  async loadDevicesFromDb() {
+    let devices = await this.devicesCollection.find({}).toArray();
+    devices = devices.map((device) => JSON.parse(JSON.stringify(device).replace('__DOLAR__', '$')));
+    this.push(...devices);
+  }
+
+  async insertDeviceToDb(device: Device) {
+    device = JSON.parse(JSON.stringify(device).replace('$', '__DOLAR__'));
+    device.config.isConnected = false;
+    await this.devicesCollection.insertOne(device);
+  }
+
+  async add(connection: DeviceConnection) {
     connection.deviceConnected.subscribe(async (config: DeviceConfig) => {
       let device = this.find((device: Device) => device.config.deviceUuid === config.deviceUuid);
       if (device !== undefined) {
@@ -26,6 +42,7 @@ export default class DeviceList extends Array<Device> {
         const device = { config, username: connection.getUsername(), connection };
         device.config.isConnected = true;
         this.push(device);
+        await this.insertDeviceToDb({ config, username: connection.getUsername(), connection: null });
       }
 
       console.log('device connected', config.deviceUuid, config.name);
@@ -100,22 +117,11 @@ export default class DeviceList extends Array<Device> {
     return null;
   }
 
-  public notifyChange(id: String, variable: string, value: object) {
-    this.gateway.getControllerList().notifyChange(id, variable, value);
-  }
-
   public getDevice(username: string, deviceUuid: String) {
     const device = this.find((device: Device) => {
-      if (device && device.username !== username) {
-        return false;
-      }
-      return device.config.deviceUuid === deviceUuid;
+      return device.username === username && device.config.deviceUuid === deviceUuid;
     });
 
-    if (device) {
-      return device.config;
-    } else {
-      return null;
-    }
+    return device ? device.config : null;
   }
 }
