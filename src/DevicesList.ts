@@ -17,7 +17,7 @@ export default class DeviceList extends Array<Device> {
   }
 
   public add(connection: DeviceConnection) {
-    connection.onDeviceConnected((config: DeviceConfig) => {
+    connection.deviceConnected.subscribe(async (config: DeviceConfig) => {
       let device = this.find((device: Device) => device.config.deviceUuid === config.deviceUuid);
       if (device !== undefined) {
         device.connection = connection;
@@ -32,7 +32,7 @@ export default class DeviceList extends Array<Device> {
       this.gateway.getControllerList().deviceAdded(config);
     });
 
-    connection.onDeviceDisconnected(() => {
+    connection.deviceDiconnected.subscribe(() => {
       let device = this.find((device: Device) => device.connection === connection);
 
       if (device) {
@@ -43,7 +43,7 @@ export default class DeviceList extends Array<Device> {
       }
     });
 
-    connection.onValueUpdated((variableUuid: string, value: object) => {
+    connection.valueUpdated.subscribe(({ variableUuid, value }) => {
       let device = this.find((device: Device) => device.connection === connection);
 
       if (device) {
