@@ -97,20 +97,18 @@ export default class DeviceList extends Array<Device> {
   }
 
   public setDeviceVariableValue(username: string, deviceUuid: String, variableUuid: string, value: object) {
-    const config = this.getDevice(username, deviceUuid);
+    const device = this.find((device: Device) => {
+      return device.username === username && device.config.deviceUuid === deviceUuid;
+    });
 
-    if (config && config.vars.hasOwnProperty(variableUuid)) {
-      const device = this.find((device: Device) => {
-        return device.config.deviceUuid === deviceUuid;
-      });
-
+    if (device && device.config.vars.hasOwnProperty(variableUuid)) {
       if (device && device.connection) {
-        config.vars[variableUuid].value = value;
+        device.config.vars[variableUuid].value = value;
         device.connection.sendRequest({
           type: MessageType.SetValue,
           args: { deviceUuid, variableUuid, value },
         });
-        return config.vars[variableUuid].value;
+        return device.config.vars[variableUuid].value;
       }
     }
     return null;
