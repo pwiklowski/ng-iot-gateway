@@ -57,7 +57,7 @@ export default class ControllerList extends Array<ControllerConnection> {
 
   deviceListChanged() {
     this.map((connection) => {
-      const devices = this.gateway.getDeviceList().getDevices(connection.getUsername());
+      const devices = this.gateway.getDeviceList()!.getDevices(connection.getUsername());
 
       const notification: Request = {
         type: MessageType.DeviceListChanged,
