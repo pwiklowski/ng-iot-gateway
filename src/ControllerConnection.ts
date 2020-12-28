@@ -49,8 +49,8 @@ export default class ControllerConnection extends WebsocketConnection {
         //TODO make sure that value is always sent as object
 
         const value = JSON.parse(msg.args.value);
-        const updatedValue = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
-        this.sendResponse(msg, { res: updatedValue });
+        const res = this.deviceList.setDeviceVariableValue(this.getUsername(), deviceUuid, variableUuid, value);
+        this.sendResponse(msg, { res });
     }
   }
 }

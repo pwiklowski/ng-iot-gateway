@@ -206,25 +206,13 @@ const WebServer = async (deviceList: DeviceList) => {
 
   app.post('/device/:deviceUuid/:variableUuid/value', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
     const value = req.body;
-    const variable = deviceList.getDeviceVariable(req.user.name, req.params.deviceUuid, req.params.variableUuid);
 
-    if (!variable) {
-      res.statusCode = 404;
-      return res.json({});
-    }
-
-    if (!variable.access.includes('w')) {
-      res.statusCode = 405;
-      return res.json({});
-    }
-
-    const validationResponse = validator.validate(value, variable.schema);
-    if (validationResponse.valid) {
-      console.log('set ', req.params.deviceUuid, req.params.variableUuid, value);
-      return res.json(deviceList.setDeviceVariableValue(req.user.name, req.params.deviceUuid, req.params.variableUuid, value));
-    } else {
+    const result = deviceList.setDeviceVariableValue(req.user.name, req.params.deviceUuid, req.params.variableUuid, value);
+    if (result.error !== undefined) {
       res.statusCode = 400;
-      return res.json({ error: validationResponse.errors.map((error) => error.message) });
+      return res.json(result);
+    } else {
+      return res.json(result.value);
     }
   });
   return app;

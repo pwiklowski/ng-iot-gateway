@@ -101,38 +101,46 @@ export default class DeviceList extends Array<Device> {
     }
   }
 
-  public setDeviceVariableValue(username: string, deviceUuid: String, variableUuid: string, value: object) {
+  setDeviceVariableValue(username: string, deviceUuid: String, variableUuid: string, value: object) {
     const device = this.find((device: Device) => {
       return device.username === username && device.config.deviceUuid === deviceUuid;
     });
 
-    if (device && device.config.vars.hasOwnProperty(variableUuid)) {
-      if (device && device.connection) {
-        if (!device.config.vars[variableUuid].access.includes('w')) {
-          console.error('variable is not writable');
-          return null;
-        }
+    if (device) {
+      if (device.config.vars.hasOwnProperty(variableUuid)) {
+        if (device.connection) {
+          const variable = device.config.vars[variableUuid];
 
-        try {
-          const validationResponse = this.validator.validate(value, device.config.vars[variableUuid].schema);
-          if (validationResponse.valid) {
-            device.config.vars[variableUuid].value = value;
-            device.connection.sendRequest({
-              type: MessageType.SetValue,
-              args: { deviceUuid, variableUuid, value },
-            });
-            return device.config.vars[variableUuid].value;
-          } else {
-            console.error('Unable to validate new value', value);
-            return null;
+          if (!variable.access.includes('w')) {
+            return { error: 'Variable is not writable' };
           }
-        } catch (e) {
-          console.error(e);
-          return null;
+
+          try {
+            const validationResponse = this.validator.validate(value, variable.schema);
+            if (validationResponse.valid) {
+              variable.value = value;
+              device.connection.sendRequest({
+                type: MessageType.SetValue,
+                args: { deviceUuid, variableUuid, value },
+              });
+              return { value: variable.value };
+            } else {
+              console.error('Unable to validate new value', value);
+              return { error: validationResponse.errors.map((error) => error.message) };
+            }
+          } catch (e) {
+            console.error(e);
+            return { error: e.message };
+          }
+        } else {
+          return { error: 'Device is not connected' };
         }
+      } else {
+        return { error: "Variable doesn't exist" };
       }
+    } else {
+      return { error: "Device doesn't exist" };
     }
-    return null;
   }
 
   public getDevice(username: string, deviceUuid: String) {

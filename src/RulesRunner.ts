@@ -46,9 +46,9 @@ export class RulesRunner {
       this.vm.setGlobal('value', value);
       this.vm.setGlobal('setValue', (deviceUuid, variableUuid, newValue) => {
         this.logRule(username, rule.id, [`Set value ${deviceUuid} ${variableUuid} ${JSON.stringify(newValue)}`]);
-        const setValue = deviceList.setDeviceVariableValue(username, deviceUuid, variableUuid, newValue);
-        if (setValue === null) {
-          this.logRule(username, rule.id, [`Unable to set value ${JSON.stringify(newValue)} to device ${deviceUuid}`]);
+        const res = deviceList.setDeviceVariableValue(username, deviceUuid, variableUuid, newValue);
+        if (res.error !== undefined) {
+          this.logRule(username, rule.id, [res.error]);
         }
       });
       this.vm.setGlobal('getValue', (deviceUuid, variableUuid) => {
