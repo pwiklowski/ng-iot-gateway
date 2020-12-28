@@ -35,14 +35,19 @@ export default class DeviceList extends Array<Device> {
     await this.devicesCollection.insertOne(device);
   }
 
+  async updateDeviceToDb(device: Device) {
+    device = JSON.parse(JSON.stringify(device).replace('$', '__DOLAR__'));
+    device.config.isConnected = false;
+    await this.devicesCollection.replaceOne({ 'config.deviceUuid': device.config.deviceUuid }, device);
+  }
+
   async add(connection: DeviceConnection) {
     connection.deviceConnected.subscribe(async (config: DeviceConfig) => {
       let device = this.find((device: Device) => device.config.deviceUuid === config.deviceUuid);
       if (device !== undefined) {
         device.connection = connection;
         device.config.isConnected = true;
-
-        //TODO update devices ?
+        await this.updateDeviceToDb({ config, username: connection.getUsername(), connection: null });
       } else {
         const device = { config, username: connection.getUsername(), connection };
         device.config.isConnected = true;
