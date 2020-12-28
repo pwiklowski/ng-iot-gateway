@@ -106,40 +106,39 @@ export default class DeviceList extends Array<Device> {
       return device.username === username && device.config.deviceUuid === deviceUuid;
     });
 
-    if (device) {
-      if (device.config.vars.hasOwnProperty(variableUuid)) {
-        if (device.connection) {
-          const variable = device.config.vars[variableUuid];
-
-          if (!variable.access.includes('w')) {
-            return { error: 'Variable is not writable' };
-          }
-
-          try {
-            const validationResponse = this.validator.validate(value, variable.schema);
-            if (validationResponse.valid) {
-              variable.value = value;
-              device.connection.sendRequest({
-                type: MessageType.SetValue,
-                args: { deviceUuid, variableUuid, value },
-              });
-              return { value: variable.value };
-            } else {
-              console.error('Unable to validate new value', value);
-              return { error: validationResponse.errors.map((error) => error.message) };
-            }
-          } catch (e) {
-            console.error(e);
-            return { error: e.message };
-          }
-        } else {
-          return { error: 'Device is not connected' };
-        }
-      } else {
-        return { error: "Variable doesn't exist" };
-      }
-    } else {
+    if (device === undefined) {
       return { error: "Device doesn't exist" };
+    }
+
+    if (!device.config.vars.hasOwnProperty(variableUuid)) {
+      return { error: "Variable doesn't exist" };
+    }
+
+    if (!device.connection) {
+      return { error: 'Device is not connected' };
+    }
+    const variable = device.config.vars[variableUuid];
+
+    if (!variable.access.includes('w')) {
+      return { error: 'Variable is not writable' };
+    }
+
+    try {
+      const validationResponse = this.validator.validate(value, variable.schema);
+      if (validationResponse.valid) {
+        variable.value = value;
+        device.connection.sendRequest({
+          type: MessageType.SetValue,
+          args: { deviceUuid, variableUuid, value },
+        });
+        return { value: variable.value };
+      } else {
+        console.error('Unable to validate new value', value);
+        return { error: validationResponse.errors.map((error) => error.message) };
+      }
+    } catch (e) {
+      console.error(e);
+      return { error: e.message };
     }
   }
 

@@ -28,19 +28,10 @@ export class RulesRunner {
 
   async valueUpdated(deviceList: DeviceList, username: string, deviceUuid: string, variableUuid: string, value: any) {
     const rules: Array<Rule> = await this.rules
-      .aggregate([
-        {
-          $match: { deviceUuid, variableUuid, username },
-        },
-        {
-          $project: { _id: 0, id: '$_id', script: 1 },
-        },
-      ])
+      .aggregate([{ $match: { deviceUuid, variableUuid, username } }, { $project: { _id: 0, id: '$_id', script: 1 } }])
       .toArray();
 
     rules.forEach((rule: Rule) => {
-      const thiz = this;
-
       this.logRule(username, rule.id, [`Triggered by value ${JSON.stringify(value)}`]);
 
       this.vm.setGlobal('value', value);
@@ -54,8 +45,8 @@ export class RulesRunner {
       this.vm.setGlobal('getValue', (deviceUuid, variableUuid) => {
         return deviceList.getDeviceVariableValue(username, deviceUuid, variableUuid);
       });
-      this.vm.setGlobal('log', function () {
-        thiz.logRule(username, rule.id, arguments);
+      this.vm.setGlobal('log', (...args) => {
+        this.logRule(username, rule.id, args);
       });
       try {
         this.vm.run(rule.script);
