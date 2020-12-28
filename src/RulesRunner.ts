@@ -38,27 +38,39 @@ export class RulesRunner {
       ])
       .toArray();
 
-    this.vm.setGlobal('value', value);
-    this.vm.setGlobal('setValue', (deviceUuid, variableUuid, newValue) => {
-      deviceList.setDeviceVariableValue(username, deviceUuid, variableUuid, newValue);
-    });
-    this.vm.setGlobal('getValue', (deviceUuid, variableUuid) => {
-      return deviceList.getDeviceVariableValue(username, deviceUuid, variableUuid);
-    });
-
     rules.forEach((rule: Rule) => {
       const thiz = this;
-      this.vm.setGlobal('log', function () {
-        console.log(rule.id, '>', ...arguments);
 
-        const args: IArguments = arguments;
-        let line = new Date().toJSON();
-        for (let i = 0; i < args.length; i++) {
-          line += ' ' + JSON.stringify(args[i]);
+      this.logRule(username, rule.id, [`Triggered by value ${JSON.stringify(value)}`]);
+
+      this.vm.setGlobal('value', value);
+      this.vm.setGlobal('setValue', (deviceUuid, variableUuid, newValue) => {
+        this.logRule(username, rule.id, [`Set value ${deviceUuid} ${variableUuid} ${JSON.stringify(newValue)}`]);
+        const setValue = deviceList.setDeviceVariableValue(username, deviceUuid, variableUuid, newValue);
+        if (setValue === null) {
+          this.logRule(username, rule.id, [`Unable to set value ${JSON.stringify(newValue)} to device ${deviceUuid}`]);
         }
-        thiz.gateway.ctrlList.ruleLog(username, rule.id!, line);
       });
-      this.vm.run(rule.script);
+      this.vm.setGlobal('getValue', (deviceUuid, variableUuid) => {
+        return deviceList.getDeviceVariableValue(username, deviceUuid, variableUuid);
+      });
+      this.vm.setGlobal('log', function () {
+        thiz.logRule(username, rule.id, arguments);
+      });
+      try {
+        this.vm.run(rule.script);
+      } catch (e) {
+        this.logRule(username, rule.id, [e.name, e.message]);
+      }
     });
+  }
+
+  logRule(username, ruleId, args) {
+    console.log(ruleId, '>', ...args);
+    let line = new Date().toJSON();
+    for (let i = 0; i < args.length; i++) {
+      line += ' ' + JSON.stringify(args[i]);
+    }
+    this.gateway.ctrlList.ruleLog(username, ruleId, line);
   }
 }
