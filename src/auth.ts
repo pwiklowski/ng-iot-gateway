@@ -2,7 +2,6 @@ import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import expressJwt from 'express-jwt';
 import { URL_DEV } from './WebSocketServer';
-import axios from 'axios';
 
 interface WebSocketAuthResult {
   username: string | undefined;
@@ -10,6 +9,7 @@ interface WebSocketAuthResult {
 }
 
 const CLIENT_ID = 'd9MufLpgGizDwBqZFB5JJpt3rD3xmVME';
+const DEVICES_CLIENT_ID = 'G2YqCMUuecbvIUWG5Fn092QXvPsxUXdU';
 const AUTH_URL = `https://wiklosoft.eu.auth0.com/`;
 
 const JWKS_RSA_OPTIONS = {
@@ -20,7 +20,7 @@ const JWKS_RSA_OPTIONS = {
 };
 
 const JWT_OPTIONS = { audience: CLIENT_ID, issuer: AUTH_URL, algorithms: ['RS256'] };
-const JWT_OPTIONS_DEVICE = { audience: 'https://wiklosoft.eu.auth0.com/api/v2/', issuer: AUTH_URL, algorithms: ['RS256'] };
+const JWT_OPTIONS_DEVICE = { audience: DEVICES_CLIENT_ID, issuer: AUTH_URL, algorithms: ['RS256'] };
 
 const client = jwksRsa(JWKS_RSA_OPTIONS);
 
@@ -47,24 +47,17 @@ function verifyToken(token: string | string[], path: string | undefined) {
   });
 }
 
-async function getUserName(token, decodedToken, path): Promise<string> {
-  if (path === URL_DEV) {
-    const response = await axios.get('https://wiklosoft.eu.auth0.com/userinfo', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data.name;
-  } else {
-    return decodedToken.name;
-  }
+function getUserName(decodedToken): string {
+  return decodedToken.name;
 }
 
 export async function authorizeWebSocket(token: string | string[], path: string | undefined): Promise<WebSocketAuthResult> {
   try {
     const decoded = await verifyToken(token, path);
-    const username = await getUserName(token, decoded, path);
+    const username = await getUserName(decoded);
     return { authorized: true, username };
   } catch (e) {
-    console.error(e);
+    console.log(e);
   }
   return { authorized: false, username: undefined };
 }
