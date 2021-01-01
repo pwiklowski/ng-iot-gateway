@@ -1,16 +1,17 @@
-import { PresetSchema, RuleSchema } from './schemas';
+import { PresetSchema, RuleSchema, AliasSchema } from './schemas';
 import express = require('express');
 import { Validator } from 'jsonschema';
 import { version } from '../package.json';
 import DeviceList from 'DevicesList';
 import { authorizeHttp } from './auth';
 import * as mongo from 'mongodb';
-import { Preset, Rule } from '@wiklosoft/ng-iot';
+import { Alias, Preset, Rule } from '@wiklosoft/ng-iot';
 import { Validator as ExpressValidator } from 'express-json-validator-middleware';
 import cors from 'cors';
 
 const RULE_PROJECTION = { username: 0, _id: 0 };
 const PRESET_PROJECTION = { username: 0, _id: 0 };
+const ALIAS_PROJECTION = { username: 0, _id: 0 };
 
 interface AuthorizedRequest extends express.Request {
   user?: any;
@@ -44,6 +45,7 @@ const WebServer = async (deviceList: DeviceList) => {
   const db = client.db('ng-iot');
   const rules = db.collection('rules');
   const presets = db.collection('presets');
+  const aliases = db.collection('aliases');
 
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
@@ -182,6 +184,83 @@ const WebServer = async (deviceList: DeviceList) => {
         preset = { ...preset, ...presetUpdate, username };
         await presets.replaceOne({ _id: new mongo.ObjectID(presetId) }, preset);
         return res.json(preset);
+      } else {
+        return res.sendStatus(404);
+      }
+    }
+  );
+
+  app.get('/aliases', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const allAliases = await aliases
+      .aggregate([
+        {
+          $match: { username: req.user.name },
+        },
+        {
+          $project: { _id: 0, id: '$_id', deviceUuid: 1, name: 1 },
+        },
+      ])
+      .toArray();
+    return res.json(allAliases);
+  });
+
+  app.get('/aliases/:aliasId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const aliasId = req.params.aliasId;
+    const alias = (await aliases.findOne({ _id: new mongo.ObjectID(aliasId), username: req.user.name }, { projection: ALIAS_PROJECTION })) as Alias;
+    if (alias) {
+      res.json(alias);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.post('/aliases', authorizeHttp, <any>expressValidator.validate({ body: AliasSchema }), async (req: AuthorizedRequest, res: express.Response) => {
+    const newAlias: Alias = req.body;
+    const username = req.user.name;
+    const alias: Alias = {
+      ...newAlias,
+      username,
+    };
+
+    let found = (await aliases.findOne({ deviceUuid: alias.deviceUuid, username }, { projection: ALIAS_PROJECTION })) as Alias;
+    if (found) {
+      res.statusCode = 400;
+      return res.json(null);
+    }
+
+    const response = await aliases.insertOne(alias);
+    if (response.result.ok === 1) {
+      return res.json(response.ops[0]);
+    }
+    res.statusCode = 500;
+    return res.json(null);
+  });
+
+  app.delete('/aliases/:aliasId', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const aliasId = req.params.aliasId;
+    const alias = (await aliases.findOne({ _id: new mongo.ObjectID(aliasId), username: req.user.name })) as Alias;
+    if (alias) {
+      await aliases.deleteOne({ _id: new mongo.ObjectID(aliasId), username: req.user.name });
+      res.sendStatus(204);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.patch(
+    '/aliases/:aliasId',
+    authorizeHttp,
+    <any>expressValidator.validate({ body: AliasSchema }),
+    async (req: AuthorizedRequest, res: express.Response) => {
+      const aliasId = req.params.aliasId;
+      const username = req.user.name;
+
+      let alias = (await aliases.findOne({ _id: new mongo.ObjectID(aliasId), username }, { projection: ALIAS_PROJECTION })) as Alias;
+      if (alias) {
+        const aliasUpdate: Alias = req.body;
+        alias = { ...alias, ...aliasUpdate, username };
+        await presets.replaceOne({ _id: new mongo.ObjectID(aliasId), username: req.user.name }, alias);
+        return res.json(alias);
       } else {
         return res.sendStatus(404);
       }

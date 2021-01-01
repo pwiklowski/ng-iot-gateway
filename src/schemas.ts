@@ -60,3 +60,18 @@ export const PresetSchema: JSONSchema7 = {
   type: 'object',
   required: ['variables', 'name'],
 };
+
+export const AliasSchema: JSONSchema7 = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  additionalProperties: false,
+  properties: {
+    deviceUuid: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+  },
+  type: 'object',
+  required: ['deviceUuid', 'name'],
+};
