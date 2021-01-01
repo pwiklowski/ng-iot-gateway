@@ -80,6 +80,17 @@ export default class DeviceList extends Array<Device> {
     });
   }
 
+  removeDevice(deviceUuid) {
+    const index = this.findIndex((device) => device.config.deviceUuid === deviceUuid);
+
+    console.log('remove devce', deviceUuid, index);
+    if (index > -1) {
+      this.splice(index, 1);
+    }
+
+    this.gateway.getControllerList().deviceListChanged();
+  }
+
   public getDevices(username: string) {
     return this.filter((device: Device) => device.username === username).map((device) => {
       return device.config;

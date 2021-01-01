@@ -41,7 +41,6 @@ export default class ControllerList extends Array<ControllerConnection> {
       };
       connection.sendRequest(notification);
     });
-    this.deviceListChanged();
   }
 
   deviceRemoved(id: String) {
@@ -52,7 +51,6 @@ export default class ControllerList extends Array<ControllerConnection> {
       };
       connection.sendRequest(notification);
     });
-    this.deviceListChanged();
   }
 
   deviceListChanged() {

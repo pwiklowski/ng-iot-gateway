@@ -2,7 +2,7 @@ import { PresetSchema, RuleSchema, AliasSchema } from './schemas';
 import express = require('express');
 import { Validator } from 'jsonschema';
 import { version } from '../package.json';
-import DeviceList from 'DevicesList';
+import DeviceList, { Device } from 'DevicesList';
 import { authorizeHttp } from './auth';
 import * as mongo from 'mongodb';
 import { Alias, Preset, Rule } from '@wiklosoft/ng-iot';
@@ -46,6 +46,7 @@ const WebServer = async (deviceList: DeviceList) => {
   const rules = db.collection('rules');
   const presets = db.collection('presets');
   const aliases = db.collection('aliases');
+  const devices = db.collection('devices');
 
   app.get('/', (req: express.Request, res: express.Response) => {
     res.send(version);
@@ -273,6 +274,21 @@ const WebServer = async (deviceList: DeviceList) => {
 
   app.get('/device/:deviceId', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
     res.json(deviceList.getDevice(req.user.name, req.params.deviceId));
+  });
+
+  app.delete('/devices', authorizeHttp, async (req: AuthorizedRequest, res: express.Response) => {
+    const deviceUuid = req.query.deviceUuid;
+    const username = req.user.name;
+
+    let device = (await devices.findOne({ 'config.deviceUuid': deviceUuid, username })) as Device;
+    if (device) {
+      await devices.deleteOne({ 'config.deviceUuid': deviceUuid, username });
+
+      deviceList.removeDevice(deviceUuid);
+      return res.sendStatus(204);
+    } else {
+      return res.sendStatus(404);
+    }
   });
 
   app.get('/device/:deviceId/:variable', authorizeHttp, (req: AuthorizedRequest, res: express.Response) => {
