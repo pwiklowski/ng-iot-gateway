@@ -96,7 +96,7 @@ const WebServer = async (deviceList: DeviceList) => {
     const ruleId = req.params.ruleId;
     const rule = (await rules.findOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name })) as Rule;
     if (rule) {
-      await rules.deleteOne({ _id: new mongo.ObjectID(ruleId) });
+      await rules.deleteOne({ _id: new mongo.ObjectID(ruleId), username: req.user.name });
       res.sendStatus(204);
     } else {
       res.sendStatus(404);
@@ -163,7 +163,7 @@ const WebServer = async (deviceList: DeviceList) => {
     const presetId = req.params.presetId;
     const preset = (await presets.findOne({ _id: new mongo.ObjectID(presetId), username: req.user.name })) as Preset;
     if (preset) {
-      await presets.deleteOne({ _id: new mongo.ObjectID(presetId) });
+      await presets.deleteOne({ _id: new mongo.ObjectID(presetId), username: req.user.name });
       res.sendStatus(204);
     } else {
       res.sendStatus(404);
@@ -182,7 +182,7 @@ const WebServer = async (deviceList: DeviceList) => {
       if (preset) {
         const presetUpdate: Preset = req.body;
         preset = { ...preset, ...presetUpdate, username };
-        await presets.replaceOne({ _id: new mongo.ObjectID(presetId) }, preset);
+        await presets.replaceOne({ _id: new mongo.ObjectID(presetId), username: req.user.name }, preset);
         return res.json(preset);
       } else {
         return res.sendStatus(404);
