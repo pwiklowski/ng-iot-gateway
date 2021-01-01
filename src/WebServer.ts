@@ -259,7 +259,7 @@ const WebServer = async (deviceList: DeviceList) => {
       if (alias) {
         const aliasUpdate: Alias = req.body;
         alias = { ...alias, ...aliasUpdate, username };
-        await presets.replaceOne({ _id: new mongo.ObjectID(aliasId), username: req.user.name }, alias);
+        await aliases.replaceOne({ _id: new mongo.ObjectID(aliasId), username }, alias);
         return res.json(alias);
       } else {
         return res.sendStatus(404);
