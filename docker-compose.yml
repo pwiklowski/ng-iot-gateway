@@ -21,6 +21,8 @@ services:
       - 'traefik.http.routers.websocket.service=websocket'
       - 'traefik.http.services.web.loadbalancer.server.port=8080'
       - 'traefik.http.services.websocket.loadbalancer.server.port=8000'
+    links:
+      - mongo:mongo
 
   mongo:
     restart: always
