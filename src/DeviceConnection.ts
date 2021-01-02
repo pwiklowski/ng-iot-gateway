@@ -2,10 +2,6 @@ import { MessageType, Request, DeviceConfig } from '@wiklosoft/ng-iot';
 import { Subject } from 'rxjs';
 import WebsocketConnection from './WebsocketConnection';
 
-interface EventCallbacks {
-  [variable: string]: Array<Function>;
-}
-
 export default class DeviceConnection extends WebsocketConnection {
   //change to subjcet
   deviceConnected = new Subject<DeviceConfig>();
