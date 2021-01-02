@@ -5,7 +5,7 @@ import { version } from '../package.json';
 import DeviceList, { Device } from 'DevicesList';
 import { authorizeHttp } from './auth';
 import * as mongo from 'mongodb';
-import { Alias, Preset, Rule } from '@wiklosoft/ng-iot';
+import { Alias, Preset, Rule, Request } from '@wiklosoft/ng-iot';
 import { Validator as ExpressValidator } from 'express-json-validator-middleware';
 import cors from 'cors';
 
@@ -84,9 +84,19 @@ const WebServer = async (deviceList: DeviceList) => {
       username,
     };
 
-    const response = await rules.insertOne(rule);
+    const response = await rules.insertOne(rule, { projection: RULE_PROJECTION });
     if (response.result.ok === 1) {
-      res.json(response.ops[0]);
+      const rule = await rules
+        .aggregate([
+          {
+            $match: { _id: new mongo.ObjectID(response.insertedId), username: req.user.name },
+          },
+          {
+            $project: { _id: 0, id: '$_id', name: 1, deviceUuid: 1 },
+          },
+        ])
+        .toArray();
+      res.json(rule[0]);
       return;
     }
     res.statusCode = 500;
