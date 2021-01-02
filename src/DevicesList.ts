@@ -70,10 +70,11 @@ export default class DeviceList extends Array<Device> {
       }
     });
 
-    connection.valueUpdated.subscribe(({ variableUuid, value }) => {
+    connection.valueUpdated.subscribe(async ({ variableUuid, value }) => {
       let device = this.find((device: Device) => device.connection === connection);
 
       if (device) {
+        await this.updateDeviceToDb({ config: device.config, username: connection.getUsername(), connection: null });
         this.gateway.getControllerList().valueUpdated(device.config.deviceUuid, variableUuid, value);
         this.gateway.rulesRunner.valueUpdated(this, connection.getUsername(), device.config.deviceUuid, variableUuid, value);
       }
