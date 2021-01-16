@@ -79,6 +79,10 @@ export default class DeviceList extends Array<Device> {
         this.gateway.rulesRunner.valueUpdated(this, connection.getUsername(), device.config.deviceUuid, variableUuid, value);
       }
     });
+
+    setTimeout(() => {
+      connection.getDeviceConfig();
+    }, 500);
   }
 
   removeDevice(deviceUuid) {

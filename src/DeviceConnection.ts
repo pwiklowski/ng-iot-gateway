@@ -7,13 +7,29 @@ export default class DeviceConnection extends WebsocketConnection {
   deviceConnected = new Subject<DeviceConfig>();
   deviceDiconnected = new Subject<string>();
   valueUpdated = new Subject<any>();
+  reqId = 0;
+
+  getDeviceConfig() {
+    const request: Request = {
+      reqId: this.reqId++,
+      type: MessageType.Hello,
+    };
+    this.sendRequest(
+      request,
+      (msg) => {
+        this.config = msg.res.config;
+        this.deviceConnected.next(this.config);
+        console.log('connected', this.config);
+      },
+      () => {
+        console.warn('on timeout');
+        this.close();
+      }
+    );
+  }
 
   handleRequest(msg: Request) {
     switch (msg.type) {
-      case MessageType.Hello:
-        this.config = msg.args.config;
-        this.deviceConnected.next(this.config);
-        break;
       case MessageType.ValueUpdated:
         this.valueUpdated.next({ variableUuid: msg.args.variableUuid, value: msg.args.value });
         break;

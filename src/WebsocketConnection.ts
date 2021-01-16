@@ -8,6 +8,7 @@ export interface AuthorizedWebSocket extends WebSocket {
 export default abstract class DeviceConnection {
   socket: AuthorizedWebSocket;
   callbacks: Map<number, Function>;
+  timeout: Map<number, Function> = new Map();
   config!: DeviceConfig;
 
   constructor(socket: AuthorizedWebSocket) {
@@ -34,19 +35,39 @@ export default abstract class DeviceConnection {
   abstract handleRequest(msg: Request): void;
 
   handleResponse(msg: Response) {
-    if (msg.resId) {
+    if (msg.resId !== undefined) {
       const callback = this.callbacks.get(msg.resId);
       if (callback) {
         callback(msg);
         this.callbacks.delete(msg.resId);
       }
+
+      const timeout = this.timeout.get(msg.resId);
+      if (timeout) {
+        this.timeout.delete(msg.resId);
+      }
     }
   }
 
-  sendRequest(req: Request, callback?: Function) {
-    if (callback !== undefined && req.reqId) {
+  sendRequest(req: Request, callback?: Function, timeout?: Function) {
+    if (callback !== undefined && req.reqId !== undefined) {
       this.callbacks.set(req.reqId, callback);
     }
+    if (timeout !== undefined && req.reqId !== undefined) {
+      const reqId = req.reqId;
+      this.timeout.set(reqId, timeout);
+
+      setTimeout(() => {
+        const timeout = this.timeout.get(reqId);
+        if (timeout) {
+          console.warn('timout occured for ', reqId);
+          timeout();
+          this.callbacks.delete(reqId);
+          this.timeout.delete(reqId);
+        }
+      }, 5000);
+    }
+
     this.socket.send(JSON.stringify(req));
   }
 
@@ -57,5 +78,9 @@ export default abstract class DeviceConnection {
 
   getUsername() {
     return this.socket.username;
+  }
+
+  close() {
+    this.socket.close();
   }
 }
