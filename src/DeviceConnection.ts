@@ -33,6 +33,11 @@ export default class DeviceConnection extends WebsocketConnection {
       case MessageType.ValueUpdated:
         this.valueUpdated.next({ variableUuid: msg.args.variableUuid, value: msg.args.value });
         break;
+      case MessageType.Ping:
+        this.sendResponse(msg, {
+          res: {},
+        });
+        break;
     }
   }
 
