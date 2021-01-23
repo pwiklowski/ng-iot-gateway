@@ -47,6 +47,11 @@ export default class DeviceList extends Array<Device> {
       if (device !== undefined) {
         device.connection = connection;
         device.config.isConnected = true;
+        device.config = config;
+
+        const index = this.indexOf(device);
+        this[index] = device;
+
         await this.updateDeviceToDb({ config, username: connection.getUsername(), connection: null });
       } else {
         const device = { config, username: connection.getUsername(), connection };
@@ -55,7 +60,7 @@ export default class DeviceList extends Array<Device> {
         await this.insertDeviceToDb({ config, username: connection.getUsername(), connection: null });
       }
 
-      console.log('device connected', config.deviceUuid, config.name);
+      console.log('device connected', config.deviceUuid, JSON.stringify(config, null, 2));
       this.gateway.getControllerList().deviceAdded(config);
     });
 
