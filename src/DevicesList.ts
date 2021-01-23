@@ -25,18 +25,18 @@ export default class DeviceList extends Array<Device> {
 
   async loadDevicesFromDb() {
     let devices = await this.devicesCollection.find({}).toArray();
-    devices = devices.map((device) => JSON.parse(JSON.stringify(device).replace('__DOLAR__', '$')));
+    devices = devices.map((device) => JSON.parse(JSON.stringify(device).replace(/__DOLAR__/g, '$')));
     this.push(...devices);
   }
 
   async insertDeviceToDb(device: Device) {
-    device = JSON.parse(JSON.stringify(device).replace('$', '__DOLAR__'));
+    device = JSON.parse(JSON.stringify(device).replace(/\$/g, '__DOLAR__'));
     device.config.isConnected = false;
     await this.devicesCollection.insertOne(device);
   }
 
   async updateDeviceToDb(device: Device) {
-    device = JSON.parse(JSON.stringify(device).replace('$', '__DOLAR__'));
+    device = JSON.parse(JSON.stringify(device).replace(/\$/g, '__DOLAR__'));
     device.config.isConnected = false;
     await this.devicesCollection.replaceOne({ 'config.deviceUuid': device.config.deviceUuid }, device);
   }
