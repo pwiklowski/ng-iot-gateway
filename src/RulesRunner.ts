@@ -3,6 +3,7 @@ import { NodeVM, VM } from 'vm2';
 import * as mongo from 'mongodb';
 import { Rule } from '@wiklosoft/ng-iot';
 import Gateway from 'Gateway';
+import { MONGO_URL } from './environment';
 
 export class RulesRunner {
   vm: VM;
@@ -18,7 +19,7 @@ export class RulesRunner {
   }
 
   async start() {
-    const client: mongo.MongoClient = await mongo.connect('mongodb://mongo:27017', {
+    const client: mongo.MongoClient = await mongo.connect(MONGO_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

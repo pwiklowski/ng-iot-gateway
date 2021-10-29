@@ -8,6 +8,7 @@ import * as mongo from 'mongodb';
 import { Alias, Preset, Rule, Request } from '@wiklosoft/ng-iot';
 import { Validator as ExpressValidator } from 'express-json-validator-middleware';
 import cors from 'cors';
+import { MONGO_URL } from './environment';
 
 const RULE_PROJECTION = { username: 0, _id: 0 };
 const PRESET_PROJECTION = { username: 0, _id: 0 };
@@ -38,7 +39,7 @@ const WebServer = async (deviceList: DeviceList) => {
     })
   );
 
-  const client: mongo.MongoClient = await mongo.connect('mongodb://mongo:27017', {
+  const client: mongo.MongoClient = await mongo.connect(MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });

@@ -4,6 +4,7 @@ import { RulesRunner } from './RulesRunner';
 import WebServer from './WebServer';
 import WebSocketServer from './WebSocketServer';
 import * as mongo from 'mongodb';
+import { MONGO_URL } from './environment';
 
 export default class Gateway {
   ctrlList: ControllerList;
@@ -24,7 +25,7 @@ export default class Gateway {
   }
 
   async start() {
-    const client: mongo.MongoClient = await mongo.connect('mongodb://mongo:27017', {
+    const client: mongo.MongoClient = await mongo.connect(MONGO_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
