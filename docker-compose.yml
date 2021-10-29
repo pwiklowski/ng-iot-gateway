@@ -2,9 +2,7 @@ version: '2'
 services:
   ng-iot-gateway:
     restart: always
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: registry.wiklosoft.com/iot-gw:${VERSION}
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.web.rule=Host(`iot.wiklosoft.com`)'
@@ -21,15 +19,6 @@ services:
       - 'traefik.http.routers.websocket.service=websocket'
       - 'traefik.http.services.web.loadbalancer.server.port=8080'
       - 'traefik.http.services.websocket.loadbalancer.server.port=8000'
-    links:
-      - mongo:mongo
-
-  mongo:
-    restart: always
-    image: mvertes/alpine-mongo:3.2.3
-    volumes:
-      - /db/ng-iot/:/data/db
-    command: mongod --smallfiles
 
 networks:
   default:
