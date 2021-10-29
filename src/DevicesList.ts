@@ -45,12 +45,15 @@ export default class DeviceList extends Array<Device> {
     connection.deviceConnected.subscribe(async (config: DeviceConfig) => {
       let device = this.find((device: Device) => device.config.deviceUuid === config.deviceUuid);
       if (device !== undefined) {
-        device.connection = connection;
-        device.config.isConnected = true;
-        device.config = config;
-
         const index = this.indexOf(device);
         this[index] = device;
+        device.connection = connection;
+        device.config.isConnected = true;
+        device.config.name = config.name;
+
+        for (const [uuid, variable] of Object.entries(device.config.vars)) {
+          this.setDeviceVariableValue(connection.getUsername(), device.config.deviceUuid, uuid, variable.value);
+        }
 
         await this.updateDeviceToDb({ config, username: connection.getUsername(), connection: null });
       } else {
